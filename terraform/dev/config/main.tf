@@ -1,9 +1,7 @@
 resource "aws_ssm_parameter" "foo" {
-  name  = "/${var.env}/${var.dns_service_name}"
+  name  = "/${var.env}/${var.config.subdomain}"
   type  = "String"
-  value = var.dns_address
+  value = var.context.dns.dns_address
 
-  tags = {
-    Env = var.env
-  }
+  tags = var.tags
 }

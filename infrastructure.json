@@ -1,0 +1,17 @@
+{
+  "dns": {
+    "acm_features_certificate_arn": "arn:aws:acm:us-east-1:046354001990:certificate/3e30db56-f9ca-4ddb-a6bd-0a6ed0b669c5",
+    "acm_master_certificate_arn": "arn:aws:acm:us-east-1:046354001990:certificate/bdb9639c-c53f-40ce-be03-fbb946e953ea",
+    "dns_address": "auth.dev.imokhonko.com",
+    "route53_zone_id": "Z04182681EA9BCN8YWSY3"
+  },
+  "config": {},
+  "s3": {
+    "s3_bucket_arn": "arn:aws:s3:::dev-auth-20231016124210235300000001",
+    "s3_bucket_bucket_domain_name": "dev-auth-20231016124210235300000001.s3.amazonaws.com",
+    "s3_bucket_name": "dev-auth-20231016124210235300000001"
+  },
+  "distribution": {
+    "cloudfront_distribtuion_id": "EDUFZHRFXFJC7"
+  }
+}

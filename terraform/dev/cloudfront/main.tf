@@ -1,36 +1,214 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
+locals {
+  hasEnv = var.env != "prod"
+
+  master_dns_record = "${var.config.subdomain}${local.hasEnv ? ".${var.env}" : ""}"
+  features_dns_record = "*.${var.config.subdomain}${local.hasEnv ? ".${var.env}" : ""}"
+}
+
+# Create origin access control for cloudfront s3
+resource "aws_cloudfront_origin_access_control" "access_control_origin" {
+  name                              = "${local.master_dns_record} origin access control"
+  description                       = "S3 bucket policy for cloudfront distribution"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+# Create cloudfront distribution for master feature
+resource "aws_cloudfront_distribution" "master_feature_distribution" {
+  origin {
+    domain_name = var.context.s3.s3_bucket_bucket_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.access_control_origin.id
+    origin_id                = "${local.master_dns_record} distribution id"
+    origin_path              = "/master" 
   }
   
-  backend "s3" {
-    bucket = "tf-state-backend-imokhonko"
-    key    = "auth-ui/dev/cloudfront_distribution.tfstate"
-    region = "us-east-1"
+  enabled             = true
+  comment             = "${local.master_dns_record} master feature distribtuion"
+  default_root_object = "index.html"
+
+  aliases = ["${local.master_dns_record}.${var.config.hostedZone}"]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.master_dns_record} distribution id"
+
+    viewer_protocol_policy = "redirect-to-https"
+
+    min_ttl                = 0
+    compress               = true
+    default_ttl            = 3600
+    max_ttl                = 86400
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = var.context.dns.acm_master_certificate_arn
+    
+    ssl_support_method = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = var.tags
+}
+
+# Create cloudfront distribution for master feature
+resource "aws_cloudfront_distribution" "features_distribution" {
+  origin {
+    domain_name = var.context.s3.s3_bucket_bucket_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.access_control_origin.id
+    origin_id                = "${local.master_dns_record} distribution id"
+    origin_path              = "" 
+  }
+  
+  enabled             = true
+  comment             = "${local.features_dns_record} master feature distribtuion"
+  default_root_object = "index.html"
+
+  aliases = ["${local.features_dns_record}.${var.config.hostedZone}"]
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.master_dns_record} distribution id"
+
+    viewer_protocol_policy = "redirect-to-https"
+
+    min_ttl                = 0
+    compress               = true
+    default_ttl            = 3600
+    max_ttl                = 86400
+
+    forwarded_values {
+      query_string = true
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
+
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = var.context.dns.acm_features_certificate_arn
+    
+    ssl_support_method = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+
+  tags = var.tags
+}
+
+# create distribution alias record for master feature
+resource "aws_route53_record" "distribution_alias_record" {
+  zone_id = var.context.dns.route53_zone_id
+  name    = local.master_dns_record
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.master_feature_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.master_feature_distribution.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 
-provider "aws" {
-  region = "us-east-1"
-  profile = "default"
+# create distribution alias record for featurs
+resource "aws_route53_record" "distribution_features_alias_record" {
+  zone_id = var.context.dns.route53_zone_id
+  name    = local.features_dns_record
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.features_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.features_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
 
-module "distribution" {
-  source = "../../../terraform-modules/web-ui/cloudfront_distribution"
-
-  feature = var.feature
-  dns_service_name = var.dns_service_name
-  env = var.env
-  hosted_zone = var.hosted_zone
-
-  route53_zone_id = var.route53_zone_id
-  acm_master_certificate_arn = var.acm_master_certificate_arn
-  acm_features_certificate_arn = var.acm_features_certificate_arn
-
-  s3_bucket_arn = var.s3_bucket_arn
-  s3_bucket_name = var.s3_bucket_name
-  s3_bucket_bucket_domain_name = var.s3_bucket_bucket_domain_name
+# Attach policy to S3 bucket in order to allow distributions to get objects from it
+resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
+  bucket = var.context.s3.s3_bucket_name
+  policy = data.aws_iam_policy_document.allow_access_from_cloudfront_distribution.json
 }
+
+# Create bucket policy for allowind cloudfront distributions to get objects from bucket
+data "aws_iam_policy_document" "allow_access_from_cloudfront_distribution" {
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = ["s3:GetObject"]
+
+    resources = ["${var.context.s3.s3_bucket_arn}/*"]
+
+    condition {
+      test     = "StringLike"
+      variable = "AWS:SourceArn"
+      values   = [
+        aws_cloudfront_distribution.master_feature_distribution.arn,
+        aws_cloudfront_distribution.features_distribution.arn
+      ]
+    }
+  }
+}
+
+# resource "aws_cloudfront_function" "test" {
+#   name    = "test"
+#   runtime = "cloudfront-js-1.0"
+#   comment = "my function"
+#   publish = true
+#   code    = "console.log('hello')"
+# }
