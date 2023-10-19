@@ -1,9 +1,0 @@
-{
-  "serviceName": "Auth web ui",
-
-  "deployChain": [
-    "pnpm run build",
-    "aws s3 sync ./dist s3://<tf-outputs:s3.s3_bucket_name> --profile default",
-    "aws cloudfront create-invalidation --distribution-id <tf-outputs:distribution.cloudfront_distribtuion_id> --paths '/*' --profile default"
-  ]
-}

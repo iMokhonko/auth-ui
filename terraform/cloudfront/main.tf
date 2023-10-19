@@ -24,7 +24,7 @@ resource "aws_cloudfront_distribution" "master_feature_distribution" {
   }
   
   enabled             = true
-  comment             = "${local.master_dns_record} master feature distribtuion"
+  comment             = "${local.master_dns_record} master feature"
   default_root_object = "index.html"
 
   aliases = ["${local.master_dns_record}.${var.config.hostedZone}"]
@@ -36,18 +36,7 @@ resource "aws_cloudfront_distribution" "master_feature_distribution" {
 
     viewer_protocol_policy = "redirect-to-https"
 
-    min_ttl                = 0
-    compress               = true
-    default_ttl            = 3600
-    max_ttl                = 86400
-
-    forwarded_values {
-      query_string = true
-
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   }
 
   custom_error_response {
@@ -64,7 +53,7 @@ resource "aws_cloudfront_distribution" "master_feature_distribution" {
     response_page_path    = "/index.html"
   }
 
-  price_class = "PriceClass_200"
+  price_class = "PriceClass_All"
 
   restrictions {
     geo_restriction {
@@ -92,8 +81,7 @@ resource "aws_cloudfront_distribution" "features_distribution" {
   }
   
   enabled             = true
-  comment             = "${local.features_dns_record} master feature distribtuion"
-  default_root_object = "index.html"
+  comment             = "${local.features_dns_record} features"
 
   aliases = ["${local.features_dns_record}.${var.config.hostedZone}"]
 
@@ -104,35 +92,15 @@ resource "aws_cloudfront_distribution" "features_distribution" {
 
     viewer_protocol_policy = "redirect-to-https"
 
-    min_ttl                = 0
-    compress               = true
-    default_ttl            = 3600
-    max_ttl                = 86400
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
 
-    forwarded_values {
-      query_string = true
-
-      cookies {
-        forward = "none"
-      }
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.features_redirect.arn
     }
   }
 
-  custom_error_response {
-    error_caching_min_ttl = 300
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-  }
-
-  custom_error_response {
-    error_caching_min_ttl = 300
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-  }
-
-  price_class = "PriceClass_200"
+  price_class = "PriceClass_100"
 
   restrictions {
     geo_restriction {
@@ -205,10 +173,30 @@ data "aws_iam_policy_document" "allow_access_from_cloudfront_distribution" {
   }
 }
 
-# resource "aws_cloudfront_function" "test" {
-#   name    = "test"
-#   runtime = "cloudfront-js-1.0"
-#   comment = "my function"
-#   publish = true
-#   code    = "console.log('hello')"
-# }
+resource "aws_cloudfront_function" "features_redirect" {
+  name    = "${var.env}-auth-ui-features-redirect"
+  runtime = "cloudfront-js-1.0"
+  comment = "Routes to s3 folder where ui build is uploaded by subdomain name"
+  publish = true
+  code    = <<-EOF
+function handler(event) {
+    var request = event.request;
+    var headers = request.headers;
+    var host = headers.host.value; // get host
+    
+    var subdomain = host.split('.')[0];
+    
+    request.uri = '/' + subdomain + request.uri;
+
+    if (request.uri.endsWith('/')) {
+        request.uri += 'index.html';
+     }
+
+     if(!/\.[0-9a-z]+$/i.test(request.uri)) {
+        request.uri = '/' + subdomain + '/index.html';
+     }
+      
+    return request;
+}
+EOF
+}

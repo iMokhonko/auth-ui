@@ -1,11 +1,22 @@
 const fs = require('fs').promises;
 const path = require('path');
 const mime = require('mime-types');
+const { spawn } = require('child_process');
+
+const runCliCommand = async ({ cmd, args }) => {
+	return new Promise(resolve => {
+		const process = spawn(cmd, args);
+    
+		process.stdout.on('data', data => console.log(`${data}`));
+		process.stderr.on('data', data => console.error(`${data}`));
+
+		process.on('exit', resolve);
+	});
+}
 
 const uploadFile = async ({ filePath, s3, bucketName, bucketPrefix }) => {
   const fileContent = await fs.readFile(filePath);
 
-  
   const params = {
       Bucket: bucketName,
       Key: `${bucketPrefix}/${filePath.replace('dist/', '')}`, 
@@ -14,7 +25,7 @@ const uploadFile = async ({ filePath, s3, bucketName, bucketPrefix }) => {
   };
 
   await s3.upload(params).promise();
-  console.log(`File uploaded successfully to ${filePath}`);
+  console.log(`File uploaded successfully to ${filePath.replace('dist', `${bucketName}/${bucketPrefix}`)}`);
 }
 
 const uploadDir = async ({ dirPath, s3, bucketName, bucketPrefix }) => {
@@ -96,24 +107,33 @@ module.exports = ({
   ],
 
   deploy: async ({ feature, infrastructure, AWS }) => {
-    // const cloudfront = new AWS.CloudFront({ apiVersion: '2019-03-26' });  
-  
+    const cloudfront = new AWS.CloudFront({ apiVersion: '2019-03-26' });  
+    
+    await runCliCommand({
+      cmd: 'npm',
+      args: ['run', 'build']
+    })
+
     await uploadDir({
       dirPath: 'dist', 
       bucketName: infrastructure.s3.s3_bucket_name, 
-      bucketPrefix: `${feature}`,
+      bucketPrefix: feature,
       s3: new AWS.S3({ apiVersion: '2006-03-01' })
     });
 
-    // await cloudfront.createInvalidation({
-    //   DistributionId: infrastructure.distribution.cloudfront_distribtuion_id,
-    //   InvalidationBatch: {
-    //       CallerReference: '' + (new Date().getTime()), 
-    //       Paths: {
-    //           Quantity: 1,
-    //           Items: ['/*']
-    //     }
-    //   }
-    // }).promise();
+    const distribtuionId = feature === 'master' 
+      ? infrastructure.distribution.master_feature_cloudfront_distribution_id
+      : infrastructure.distribution.features_cloudfront_distribution_id
+
+    await cloudfront.createInvalidation({
+      DistributionId: distribtuionId,
+      InvalidationBatch: {
+          CallerReference: '' + (new Date().getTime()), 
+          Paths: {
+              Quantity: 1,
+              Items: feature === 'master' ? [`/*`] : [`/${feature}/*`]
+        }
+      }
+    }).promise();
   }
 });
