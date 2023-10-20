@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page">
     <div class="auth-page__email-container">
-      test feature 222
+      keklol
       <input 
         placeholder="email" 
         v-model="email"

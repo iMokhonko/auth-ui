@@ -121,7 +121,7 @@ module.exports = ({
       s3: new AWS.S3({ apiVersion: '2006-03-01' })
     });
 
-    const distribtuionId = feature === 'master' 
+    const distribtuionId = feature === 'master'
       ? infrastructure.distribution.master_feature_cloudfront_distribution_id
       : infrastructure.distribution.features_cloudfront_distribution_id
 

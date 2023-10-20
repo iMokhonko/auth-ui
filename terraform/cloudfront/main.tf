@@ -30,7 +30,7 @@ resource "aws_cloudfront_distribution" "master_feature_distribution" {
   aliases = ["${local.master_dns_record}.${var.config.hostedZone}"]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "${local.master_dns_record} distribution id"
 
@@ -73,6 +73,8 @@ resource "aws_cloudfront_distribution" "master_feature_distribution" {
 
 # Create cloudfront distribution for master feature
 resource "aws_cloudfront_distribution" "features_distribution" {
+  count = var.env != "prod" ? 1 : 0
+
   origin {
     domain_name = var.context.s3.s3_bucket_bucket_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.access_control_origin.id
@@ -86,7 +88,7 @@ resource "aws_cloudfront_distribution" "features_distribution" {
   aliases = ["${local.features_dns_record}.${var.config.hostedZone}"]
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "${local.master_dns_record} distribution id"
 
@@ -101,6 +103,13 @@ resource "aws_cloudfront_distribution" "features_distribution" {
   }
 
   price_class = "PriceClass_100"
+
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/master/index.html"
+  }
 
   restrictions {
     geo_restriction {
@@ -133,13 +142,15 @@ resource "aws_route53_record" "distribution_alias_record" {
 
 # create distribution alias record for featurs
 resource "aws_route53_record" "distribution_features_alias_record" {
+  count = var.env != "prod" ? 1 : 0
+
   zone_id = var.context.dns.route53_zone_id
   name    = local.features_dns_record
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.features_distribution.domain_name
-    zone_id                = aws_cloudfront_distribution.features_distribution.hosted_zone_id
+    name                   = aws_cloudfront_distribution.features_distribution[0].domain_name
+    zone_id                = aws_cloudfront_distribution.features_distribution[0].hosted_zone_id
     evaluate_target_health = false
   }
 }
@@ -165,16 +176,18 @@ data "aws_iam_policy_document" "allow_access_from_cloudfront_distribution" {
     condition {
       test     = "StringLike"
       variable = "AWS:SourceArn"
-      values   = [
+      values   =var.env != "prod" ? [
         aws_cloudfront_distribution.master_feature_distribution.arn,
-        aws_cloudfront_distribution.features_distribution.arn
+        aws_cloudfront_distribution.features_distribution[0].arn
+      ] : [
+         aws_cloudfront_distribution.master_feature_distribution.arn,
       ]
     }
   }
 }
 
 resource "aws_cloudfront_function" "features_redirect" {
-  name    = "${var.env}-auth-ui-features-redirect"
+  name    = "${var.env}-${var.config.subdomain}-features-redirect"
   runtime = "cloudfront-js-1.0"
   comment = "Routes to s3 folder where ui build is uploaded by subdomain name"
   publish = true
