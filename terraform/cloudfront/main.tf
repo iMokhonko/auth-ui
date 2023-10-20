@@ -98,7 +98,7 @@ resource "aws_cloudfront_distribution" "features_distribution" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.features_redirect.arn
+      function_arn = aws_cloudfront_function.features_redirect[0].arn
     }
   }
 
@@ -187,6 +187,8 @@ data "aws_iam_policy_document" "allow_access_from_cloudfront_distribution" {
 }
 
 resource "aws_cloudfront_function" "features_redirect" {
+  count = var.env != "prod" ? 1 : 0
+
   name    = "${var.env}-${var.config.subdomain}-features-redirect"
   runtime = "cloudfront-js-1.0"
   comment = "Routes to s3 folder where ui build is uploaded by subdomain name"

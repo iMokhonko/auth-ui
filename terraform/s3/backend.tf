@@ -8,7 +8,7 @@ terraform {
   
   backend "s3" {
     bucket = "tf-state-backend-imokhonko"
-    key    = "auth-ui/dev/s3.tfstate"
+    key    = "auth-ui/prod/s3.tfstate"
     region = "us-east-1"
   }
 }
