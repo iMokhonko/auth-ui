@@ -52,6 +52,34 @@ const uploadDir = async ({ dirPath, s3, bucketName, bucketPrefix }) => {
   } 
 }
 
+const clearDir = async ({ s3, bucketName, bucketPrefix }) => {
+  var params = {
+    Bucket: bucketName,
+    Prefix: bucketPrefix
+  };
+
+  try {
+    const listedObjects = await s3.listObjectsV2(params).promise();
+
+    if (listedObjects.Contents.length === 0) return;
+
+    params = {Bucket: bucketName};
+    params.Delete = { Objects: [] };
+
+    listedObjects.Contents.forEach(({ Key }) => {
+      params.Delete.Objects.push({ Key });
+    });
+
+    params.Delete.Objects.push({ Key: `${bucketPrefix}/` });
+
+    await s3.deleteObjects(params).promise();
+
+    if (listedObjects.IsTruncated) await clearDir(bucketName, bucketPrefix);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 module.exports = ({
   serviceName: 'Auth UI',
 
@@ -108,17 +136,28 @@ module.exports = ({
 
   deploy: async ({ feature, infrastructure, AWS }) => {
     const cloudfront = new AWS.CloudFront({ apiVersion: '2019-03-26' });  
+    const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
     
-    await runCliCommand({
-      cmd: 'npm',
-      args: ['run', 'build']
-    })
+    await Promise.all([
+      // build project
+      runCliCommand({
+        cmd: 'npm',
+        args: ['run', 'build']
+      }),
+
+       // clear old files in bucket for this feature
+      clearDir({
+        s3,
+        bucketName: infrastructure.s3.s3_bucket_name, 
+        bucketPrefix: feature,
+      })
+    ]);
 
     await uploadDir({
       dirPath: 'dist', 
       bucketName: infrastructure.s3.s3_bucket_name, 
       bucketPrefix: feature,
-      s3: new AWS.S3({ apiVersion: '2006-03-01' })
+      s3
     });
 
     const distribtuionId = feature === 'master'
@@ -135,5 +174,5 @@ module.exports = ({
         }
       }
     }).promise();
-  }
+  },
 });
