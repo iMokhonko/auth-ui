@@ -4,7 +4,6 @@ node_modules
 env.json
 infrastructure.json
 *.zip
-backend.tf
 
 # local env files
 .env.local
@@ -28,3 +27,4 @@ pnpm-debug.log*
 # Terraform system files
 **/.terraform
 **/.terraform.lock.hcl
+**/backend.tf
