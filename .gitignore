@@ -27,4 +27,4 @@ pnpm-debug.log*
 # Terraform system files
 **/.terraform
 **/.terraform.lock.hcl
-**/backend.tf
+**backend.tf
