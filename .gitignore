@@ -3,7 +3,7 @@ node_modules
 /dist
 env.json
 infrastructure.json
-*.cligenerated.tf
+*.cligenerated*
 *.zip
 
 # local env files
