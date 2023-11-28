@@ -1,9 +1,16 @@
 <template>
   <div class="auth-page">
     <div class="auth-page__email-container">
+      <div 
+        v-if="isError"
+        class="auth-page__error-alert"
+      >
+        {{ errorMessage }}
+      </div>
+
       <input 
-        placeholder="email" 
-        v-model="email"
+        placeholder="email or login" 
+        v-model="login"
       >
       <input 
         placeholder="password" 
@@ -11,15 +18,20 @@
         v-model="password"
       >
       <div class="auth-page__actions">
-        <button :disabled="isLoading" class="auth-page__action-btn" @click="logIn">{{ isLoading ? 'Loading...' : 'Log in' }}</button>
-        <RouterLink to="/register">Register</RouterLink>
+        <button
+          :class="['auth-page__action-btn', { 'disabled': isLoading }]" 
+          @click="signIn"
+        >
+          {{ isLoading ? 'Loging in...' : 'Log in' }}
+        </button>
+        <RouterLink :to="registerLinkUrl">Register</RouterLink>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 import env from '../../env.cligenerated.json';
 
@@ -30,51 +42,69 @@ export default {
 
   setup() {
     const { query } = useRoute();
+    const { redirect_url } = query ?? {};
 
-    const email = ref('imokhonko');
-    const password = ref('1234');
+    const login = ref('');
+    const password = ref('');
+
+    const isError = ref(false);
+    const errorMessage = ref('')
 
     const isLoading = ref(false);
 
-    const logIn = async () => {
+    const registerLinkUrl = computed(() => redirect_url ? `/register?redirect_url=${redirect_url}` : '/register');
+
+    const signIn = async () => {
       try {
         isLoading.value = true;
+        isError.value = false;
 
         const response = await fetch(`https://${env['auth-api']}/sign-in`, {
           method: "POST",
           body: JSON.stringify({
-            login:  email.value,
+            login: login.value,
             password: password.value
           })
         });
 
         const result = await response.json();
 
-        const { token, refreshToken } = result;
+        console.log('result', result)
 
-        const isDev = process.env.NODE_ENV === 'development';
+        if(result.errorMessage) {
+          isError.value = true;
+          errorMessage.value = result.errorMessage;
+        } else {
+          const { token, refreshToken } = result;
 
-        document.cookie = `token=${token.value};maxAge=${token.maxAge};path=${token.path ?? ''};sameSite=${token.sameSite ?? 'none'};secure=${token.secure ?? false};domain=${isDev ? 'localhost' : token.domain}`;
-        document.cookie = `refreshToken=${refreshToken.value};maxAge=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
-      
-        const { redirect_url } = query ?? {};
+          const isDev = process.env.NODE_ENV === 'development';
 
-        if(redirect_url) {
-          window.location = redirect_url;
+          document.cookie = `token=${token.value};maxAge=${token.maxAge};path=${token.path ?? ''};sameSite=${token.sameSite ?? 'none'};secure=${token.secure ?? false};domain=${isDev ? 'localhost' : token.domain}`;
+          document.cookie = `refreshToken=${refreshToken.value};maxAge=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
+        
+
+          if(redirect_url) {
+            window.location = redirect_url;
+          }
         }
       } catch(e) {
-        console.error(e)
+        console.error(e);
+        isError.value = true;
       } finally {
         isLoading.value = false;
       }
     };
 
     return {
-      email,
+      login,
       password,
       isLoading,
+      registerLinkUrl,
 
-      logIn
+      isError,
+      errorMessage,
+
+      signIn
     }
   }
 }
@@ -108,6 +138,18 @@ export default {
   &__action-btn {
     display: flex;
     width: fit-content;
+  }
+
+  &__error-alert {
+    background: rgba(255, 0, 0, 0.7);
+    border-radius: 4px;
+    padding: 16px;
+    color: #000;
+  }
+
+  .disabled {
+    pointer-events: none;
+    opacity: 0.5;
   }
 }
 </style>
