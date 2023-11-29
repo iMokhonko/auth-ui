@@ -79,8 +79,8 @@ export default {
 
           const isDev = process.env.NODE_ENV === 'development';
 
-          document.cookie = `token=${token.value};maxAge=${token.maxAge};path=${token.path ?? ''};sameSite=${token.sameSite ?? 'none'};secure=${token.secure ?? false};domain=${isDev ? 'localhost' : token.domain}`;
-          document.cookie = `refreshToken=${refreshToken.value};maxAge=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
+          document.cookie = `token=${token.value};max-age=${token.maxAge};path=${token.path ?? ''};sameSite=${token.sameSite ?? 'none'};secure=${token.secure ?? false};domain=${isDev ? 'localhost' : token.domain}`;
+          document.cookie = `refreshToken=${refreshToken.value};max-age=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
         
 
           if(redirect_url) {
