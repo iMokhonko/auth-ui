@@ -71,11 +71,11 @@ export default {
 
     const authApiUrl = `https://${env['auth-api']}`
 
-    const email = ref('');
-    const username = ref('');
-    const password = ref('');
-    const firstName = ref('');
-    const lastName = ref('');
+    const email = ref('imohonyko@gmail.com');
+    const username = ref('ivan.mokhonko');
+    const password = ref('1234');
+    const firstName = ref('Ivan');
+    const lastName = ref('Mokhonko');
 
     const isLoading = ref(false);
     const isError = ref(false);

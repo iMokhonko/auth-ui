@@ -44,8 +44,8 @@ export default {
     const { query } = useRoute();
     const { redirect_url } = query ?? {};
 
-    const login = ref('');
-    const password = ref('');
+    const login = ref('ivan.mokhonko');
+    const password = ref('1234');
 
     const isError = ref(false);
     const errorMessage = ref('')
@@ -69,23 +69,21 @@ export default {
 
         const result = await response.json();
 
-        console.log('result', result)
-
-        if(result.errorMessage) {
-          isError.value = true;
-          errorMessage.value = result.errorMessage;
-        } else {
-          const { token, refreshToken } = result;
+        if(response.status === 200) {
+          const { accessToken, refreshToken } = result;
 
           const isDev = process.env.NODE_ENV === 'development';
 
-          document.cookie = `token=${token.value};max-age=${token.maxAge};path=${token.path ?? ''};sameSite=${token.sameSite ?? 'none'};secure=${token.secure ?? false};domain=${isDev ? 'localhost' : token.domain}`;
-          document.cookie = `refreshToken=${refreshToken.value};max-age=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
-        
+          // prod env does not have prefix
+          const cookiePrefix = env.__meta.config.env !== 'prod' ? `${env.__meta.config.env}-` : '';
 
-          if(redirect_url) {
-            window.location = redirect_url;
-          }
+          document.cookie = `${cookiePrefix}access-token=${accessToken.value};max-age=${accessToken.maxAge};path=${accessToken.path ?? ''};sameSite=${accessToken.sameSite ?? 'none'};secure=${accessToken.secure ?? false};domain=${isDev ? 'localhost' : accessToken.domain}`;
+          document.cookie = `${cookiePrefix}refresh-token=${refreshToken.value};max-age=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
+        
+          if(redirect_url) window.location = redirect_url;
+        } else {
+          isError.value = true;
+          errorMessage.value = result.errorMessage;
         }
       } catch(e) {
         console.error(e);
