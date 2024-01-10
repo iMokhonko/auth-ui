@@ -98,6 +98,7 @@ export default {
         const response = await fetch(`https://${env['auth-api']}/sign-in`, {
           method: "POST",
           body: JSON.stringify({
+            authType: 'CREDENTIALS',
             login: login.value,
             password: password.value
           })
@@ -125,9 +126,12 @@ export default {
 
     const handleGoogleAuth = async (authResponse) => {
       try {
-        const response = await fetch(`https://${env['auth-api']}/auth/google`, {
+        const response = await fetch(`https://${env['auth-api']}/sign-in`, {
           method: "POST",
-          body: JSON.stringify({ credential: authResponse.credential })
+          body: JSON.stringify({
+            authType: 'GOOGLE',
+            googleCredential: authResponse.credential 
+          })
         });
 
         if(response.status === 200) {
