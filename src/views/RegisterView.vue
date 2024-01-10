@@ -62,20 +62,26 @@ import env from '../../env.cligenerated.json'
 
 import { useRoute } from 'vue-router';
 
+import { jwtDecode } from "jwt-decode";
+
 export default {
   name: 'RegisterView',
 
   setup() {
+    const googleAuthResponse = window.GOOGLE_AUTH_RESPONSE;
+    const hasGoogleResponseData = !!googleAuthResponse;
+    const googleAuthResponseDecodedData = hasGoogleResponseData ? jwtDecode(googleAuthResponse.credential) : {};
+
     const { query } = useRoute();
     const { redirect_url } = query ?? {};
 
     const authApiUrl = `https://${env['auth-api']}`
 
-    const email = ref('imohonyko@gmail.com');
-    const username = ref('ivan.mokhonko');
-    const password = ref('1234');
-    const firstName = ref('Ivan');
-    const lastName = ref('Mokhonko');
+    const email = ref(googleAuthResponseDecodedData?.email ?? '');
+    const username = ref('');
+    const password = ref('');
+    const firstName = ref(googleAuthResponseDecodedData?.given_name ?? '');
+    const lastName = ref(googleAuthResponseDecodedData?.family_name ?? '');
 
     const isLoading = ref(false);
     const isError = ref(false);
@@ -96,7 +102,8 @@ export default {
             login: username.value,
             password: password.value,
             firstName: firstName.value,
-            lastName: lastName.value
+            lastName: lastName.value,
+            ...(googleAuthResponse?.credential && { googleCredential: googleAuthResponse.credential })
           })
         });
 
@@ -123,6 +130,9 @@ export default {
       firstName,
       lastName,
 
+      hasGoogleResponseData,
+      googleAuthResponseDecodedData,
+
       isLoading,
       isError,
       isSuccess,
@@ -144,6 +154,20 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &__sign-up-as-container {
+    display: flex;
+    column-gap: 8px;
+    align-items: center;
+
+    img {
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      background: #f2f2f2;
+      flex-shrink: 0;
+    }
+  }
 
   &__email-container {
     width: 300px;
