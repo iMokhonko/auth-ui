@@ -15,6 +15,7 @@ body,
 * {
   box-sizing: border-box;
   font-family: 'Roboto', sans-serif;
+  font-size: 14px;
 }
 
 .hidden-disable {

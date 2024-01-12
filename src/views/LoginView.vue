@@ -1,6 +1,6 @@
 <template>
   <div class="auth-page">
-    <div class="auth-page__bg-container" />
+    <MovingBackground class="auth-page__bg-container" />
 
     <div 
       class="auth-page__auth-container"
@@ -16,7 +16,7 @@
             'hidden-disable': isLoading
           }]"
         >
-          <h2>Sign in to iMokhonko</h2>
+          <h1>Sign in to iMokhonko</h1>
 
           <ErrorAlert v-if="isError">
             {{ errorMessage }}
@@ -41,7 +41,7 @@
               v-model="isRememberMe"
             />
 
-            <RouterLink class="auth-page__forgot-pass-link" :to="registerLinkUrl">Forgot password?</RouterLink>
+            <RouterLink class="auth-page__forgot-pass-link" to="/forgot-password">Forgot password?</RouterLink>
           </div>
 
           <PrimaryButton
@@ -57,7 +57,6 @@
           <div class="auth-page__sign-up-container">
             Don't have an account? <RouterLink class="auth-page__sign-up-link" :to="registerLinkUrl">Sign up now</RouterLink>
           </div>
-
         </div>
     </div>
   </div>
@@ -78,10 +77,9 @@ import CheckboxInput from '@/components/reusable/CheckboxInput';
 import PrimaryButton from '@/components/reusable/PrimaryButton';
 import SpinLoader from '@/components/reusable/SpinLoader';
 import ErrorAlert from '@/components/reusable/ErrorAlert';
+import MovingBackground from '@/components/layout/MovingBackground';
 
 export default {
-  name: 'HomeView',
-
   components: {
     TextInput,
     GoogleAuth,
@@ -89,11 +87,14 @@ export default {
     CheckboxInput,
     PrimaryButton,
     SpinLoader,
-    ErrorAlert
+    ErrorAlert,
+    MovingBackground
   },
 
 
   setup() {
+    document.title = 'Sign in | iMokhonko';
+
     const router = useRouter();
     const { query } = useRoute();
 
@@ -109,7 +110,7 @@ export default {
     const isLoading = ref(false);
     const isGoogleCredentialsVerification = ref(false);
 
-    const registerLinkUrl = computed(() => redirect_url ? `/register?redirect_url=${redirect_url}` : '/register');
+    const registerLinkUrl = computed(() => redirect_url ? `/sing-up?redirect_url=${redirect_url}` : '/sign-up');
 
     const setCookies = (accessToken, refreshToken) => {
       const isDev = process.env.NODE_ENV === 'development';
@@ -216,12 +217,15 @@ export default {
   height: 100%;
   display: flex;
 
+  h1 {
+    font-size: 24px;
+    text-align: center;
+  }
+
   &__bg-container {
     width: 100%;
+    height: 100%;
     max-width: 500px;
-    background: url('@/assets/images/bg.webp');
-    object-fit: cover;
-    flex-shrink: 0;
   }
 
   &__auth-container {
