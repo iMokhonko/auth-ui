@@ -55,7 +55,7 @@
           <GoogleAuth @authenticated="handleGoogleAuth" />
 
           <div class="auth-page__sign-up-container">
-            Don't have an account? <RouterLink class="auth-page__sign-up-link" :to="registerLinkUrl">Sign up now</RouterLink>
+            Don't have an account? <RouterLink class="auth-page__sign-up-link" :to="registerLinkUrl">Create account.</RouterLink>
           </div>
         </div>
     </div>
@@ -256,7 +256,7 @@ export default {
     }
 
     &-inner {
-      max-width: 350px;
+      max-width: 400px;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -298,7 +298,6 @@ export default {
     column-gap: 4px;
 
     font-size: 14px;
-    font-weight: bold;
     color: #6e6d7a;
   }
 

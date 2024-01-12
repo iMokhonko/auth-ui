@@ -1,61 +1,75 @@
 <template>
-  <div class="register-page">
-    <div class="register-page__email-container">
-      <div 
-        v-if="isError"
-        class="register-page__error-alert"
-      >
-        {{ errorMessage }}
-      </div>
+  <div class="auth-page">
+    <MovingBackground class="auth-page__bg-container" />
 
-      <div 
-        v-if="isSuccess"
-        class="register-page__success-alert"
-      >
-        You have successfully registered. Plese check your email for confirmation letter.
-      </div>
+    <div class="auth-page__auth-container">
+        <div class="auth-page__auth-container-inner">
+          <h1>Create account</h1>
 
-      <input 
-        v-if="!isSuccess"
-        placeholder="Username" 
-        v-model="username"
-      >
-      <input 
-        v-if="!isSuccess"
-        placeholder="email" 
-        v-model="email"
-      >
-      <input 
-        v-if="!isSuccess"
-        placeholder="Password" 
-        type="password"
-        v-model="password"
-      >
-      <input 
-        v-if="!isSuccess"
-        placeholder="First name" 
-        v-model="firstName"
-      >
-      <input 
-        v-if="!isSuccess"
-        placeholder="Last name" 
-        v-model="lastName"
-      >
-      <div class="register-page__actions">
-        <button 
-          v-if="!isSuccess"
-          :class="['register-page__action-btn', { 'disabled': isLoading }]" 
-          @click="register"
-        >
-          {{ isLoading ? 'Registering...' : 'Register' }}
-        </button>
-        <RouterLink :to="loginLinkUrl">Log in</RouterLink>
-      </div>
+          <ErrorAlert v-if="isError">
+            {{ errorMessage }}
+          </ErrorAlert>
+
+
+          <div class="row">
+            <TextInput
+              label="First name"
+              placeholder="Enter your first name"
+              :model-value="firstName"
+              @update:modelValue="firstName = $event" 
+            />
+
+            <TextInput
+              label="Last name"
+              placeholder="Enter your last name"
+              :model-value="lastName"
+              @update:modelValue="lastName = $event" 
+            />
+          </div>
+
+           <TextInput
+            label="Username"
+            placeholder="Enter your username"
+            :model-value="username"
+            @update:modelValue="username = $event" 
+          />
+
+           <TextInput
+            label="Email address"
+            placeholder="Email your email address"
+            :model-value="email"
+            @update:modelValue="email = $event" 
+          />
+
+          <TextInput
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            :model-value="password"
+            @update:modelValue="password = $event" 
+          />
+
+          <PrimaryButton
+            label="Create account"
+            @click="signUp"
+            :is-loading="isLoading"
+          />
+
+          <div class="auth-page__sign-up-container">
+            Already have an account? <RouterLink class="auth-page__sign-up-link" :to="loginLinkUrl">Sign in</RouterLink>
+          </div>
+        </div>
     </div>
   </div>
 </template>
 
 <script>
+// components
+import TextInput from '@/components/reusable/TextInput';
+import PrimaryButton from '@/components/reusable/PrimaryButton';
+import ErrorAlert from '@/components/reusable/ErrorAlert';
+import MovingBackground from '@/components/layout/MovingBackground';
+
 import { ref, computed } from 'vue';
 
 import env from '../../env.cligenerated.json'
@@ -65,9 +79,15 @@ import { useRoute } from 'vue-router';
 import { jwtDecode } from "jwt-decode";
 
 export default {
-  name: 'RegisterView',
+  components: {
+    TextInput,
+    PrimaryButton,
+    ErrorAlert,
+    MovingBackground
+  },
 
   setup() {
+    document.title = 'Create account | iMokhonko'
     const googleAuthResponse = window.GOOGLE_AUTH_RESPONSE;
     const hasGoogleResponseData = !!googleAuthResponse;
     const googleAuthResponseDecodedData = hasGoogleResponseData ? jwtDecode(googleAuthResponse.credential) : {};
@@ -147,64 +167,113 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.register-page {
-  background:#f2f2f2;
+.auth-page {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
 
-  &__sign-up-as-container {
+  h1 {
+    font-size: 24px;
+  }
+
+  .row {
     display: flex;
-    column-gap: 8px;
     align-items: center;
+    column-gap: 16px;
 
-    img {
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      background: #f2f2f2;
+    .text-input {
+      width: calc(50% - 8px);
       flex-shrink: 0;
     }
   }
 
-  &__email-container {
-    width: 300px;
-    padding: 16px;
-    border-radius: 8px;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    row-gap: 8px;
+  &__bg-container {
+    width: 100%;
+    height: 100%;
+    max-width: 500px;
   }
 
-  &__actions {
+  &__auth-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
+    background: #fff;
+    position: relative;
+
+    &--loading-overlay {
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        content: "";
+        background: rgba(0,0,0,0.5);
+        width: 100%;
+        height: 100%
+      }
+    }
+
+    .loader {
+      position: absolute;
+      z-index: 101;
+    }
+
+    &-inner {
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      row-gap: 16px;
+
+      h2 {
+        text-align: center;
+      }
+
+      .btn-primary {
+        margin-top: 8px;
+      }
+    }
+  }
+
+  &__login-action-container {
     display: flex;
     align-items: center;
-    column-gap: 8px;
+    justify-content: space-between;
   }
 
-  &__action-btn {
+  &__forgot-pass-link {
+    font-size: 12px;
+    color: grey;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
+  &__sign-up-container {
+    width: 100%;
     display: flex;
-    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    column-gap: 4px;
+
+    font-size: 14px;
+    color: #6e6d7a;
   }
 
-  &__error-alert,
-  &__success-alert {
-    background: rgba(255, 0, 0, 0.7);
-    border-radius: 4px;
-    padding: 16px;
-    color: #000;
-  }
+  &__sign-up-link {
+    text-decoration: none;
+    color: rgba(23,138,231, 1);
 
-  &__success-alert {
-    background: rgba(0, 255, 0, 0.7);
-  }
-
-  .disabled {
-    pointer-events: none;
-    opacity: 0.5;
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 }
 </style>

@@ -1,5 +1,10 @@
 <template>
-  <fieldset class="text-input">
+  <fieldset 
+    class="text-input"
+    :class="{
+      'invalid': isInvalid
+    }"
+  >
     <label 
       v-if="label" 
       :for="name"
@@ -14,6 +19,13 @@
       :name="name"
       @input="updateModelValue"
     >
+
+    <span 
+      v-if="isInvalid && errorMessage"
+      class="text-input__error-message"
+    >
+      {{ errorMessage }}
+    </span>
   </fieldset>
 </template>
 
@@ -46,6 +58,16 @@ export default {
       type: String,
       default: '',
     },
+
+    isInvalid: {
+      type: Boolean,
+      default: true
+    },
+
+    errorMessage: {
+      type: String,
+      default: 'Invalid'
+    }
   },
 
   setup(props, { emit }) {
@@ -85,6 +107,17 @@ export default {
   label {
     font-size: 14px;
     font-weight: bold;
+  }
+
+  &.invalid {
+    input {
+      border-color: #ff5555;
+    }
+  }
+
+  &__error-message {
+    color: #ff5555;
+    font-size: 12px;
   }
 }
 </style>
