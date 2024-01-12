@@ -73,7 +73,7 @@ export default {
     padding: 8px 16px;
     border-radius: 48px;
     outline: none;
-    border: 1px solid rgb(243, 243, 243);
+    border: 1px solid #e7e7e9;
     background: #fff;
 
     &:focus-visible {

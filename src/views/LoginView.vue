@@ -1,6 +1,5 @@
 <template>
   <div class="auth-page">
-
     <div class="auth-page__bg-container" />
 
     <div 
@@ -17,14 +16,11 @@
             'hidden-disable': isLoading
           }]"
         >
-          <h2>Sign in to iMokhonko.com</h2>
+          <h2>Sign in to iMokhonko</h2>
 
-          <!-- <div 
-            v-if="isError"
-            class="auth-page__error-alert"
-          >
+          <ErrorAlert v-if="isError">
             {{ errorMessage }}
-          </div> -->
+          </ErrorAlert>
 
           <TextInput
             :model-value="login"
@@ -81,6 +77,7 @@ import LabeledDivider from '@/components/reusable/LabeledDivider';
 import CheckboxInput from '@/components/reusable/CheckboxInput';
 import PrimaryButton from '@/components/reusable/PrimaryButton';
 import SpinLoader from '@/components/reusable/SpinLoader';
+import ErrorAlert from '@/components/reusable/ErrorAlert';
 
 export default {
   name: 'HomeView',
@@ -91,7 +88,8 @@ export default {
     LabeledDivider,
     CheckboxInput,
     PrimaryButton,
-    SpinLoader
+    SpinLoader,
+    ErrorAlert
   },
 
 
@@ -147,7 +145,7 @@ export default {
           if(redirect_url) window.location = redirect_url;
         } else {
           isError.value = true;
-          errorMessage.value = result.errorMessage;
+          errorMessage.value = 'We couldn’t find an account matching the login and password you entered';
         }
       } catch(e) {
         console.error(e);
