@@ -45,7 +45,7 @@ export default {
     modelValue: {
       type: String,
       default: '',
-    }
+    },
   },
 
   setup(props, { emit }) {
@@ -69,15 +69,16 @@ export default {
 
   input {
     width: 100%;
-    height: 56px;
-    padding: 18px 20px;
-    border-radius: 12px;
+    height: 48px;
+    padding: 8px 16px;
+    border-radius: 48px;
     outline: none;
-    border: 1px solid rgb(231, 231, 231);
+    border: 1px solid rgb(243, 243, 243);
+    background: #fff;
 
     &:focus-visible {
-      border-color: rgba(234,100,217,0.4);
-      box-shadow: 0 0 0 4px rgba(234,100,217,0.1);
+      border-color: rgba(23,138,231,0.4);
+      box-shadow: 0 0 0 4px rgba(23,138,231,0.1);
     }
   }
 

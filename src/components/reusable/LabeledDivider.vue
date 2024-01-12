@@ -12,13 +12,14 @@
   justify-content: center;
   position: relative;
   padding: 16px 0;
+  user-select: none;
 
   &__text {
     background: #fff;
-    padding: 0 12px;
+    padding: 0 8px;
     z-index: 2;
     color: #6e6d7a;
-    font-size: 14px;
+    font-size: 12px;
   }
 
   &::before {

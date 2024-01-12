@@ -1,44 +1,68 @@
 <template>
   <div class="auth-page">
 
-    <div class="auth-page__email-container">
-       <h2>Sign in</h2>
+    <div class="auth-page__bg-container" />
 
-      <div 
-        v-if="isError"
-        class="auth-page__error-alert"
-      >
-        {{ errorMessage }}
-      </div>
+    <div 
+      class="auth-page__auth-container"
+      :class="{
+        'auth-page__auth-container--loading-overlay': isGoogleCredentialsVerification
+      }"
+    >
+      <SpinLoader v-if="isGoogleCredentialsVerification" />
 
-      <GoogleAuth @authenticated="handleGoogleAuth" />
-
-      <LabeledDivider>or</LabeledDivider>
-
-      <TextInput 
-        label="Username or Email"
-        :model-value="login"
-        @update:modelValue="login = $event" 
-      />
-
-      <TextInput 
-        label="Password"
-        type="password"
-        :model-value="password"
-        @update:modelValue="password = $event" 
-      />
-
-
-      <div class="auth-page__actions">
-        <button
-          :class="['auth-page__action-btn', { 'disabled': isLoading }]" 
-          @click="signIn"
+        <div 
+          class="auth-page__auth-container-inner"
+          :class="[{
+            'hidden-disable': isLoading
+          }]"
         >
-          {{ isLoading ? 'Loging in...' : 'Log in' }}
-        </button>
-        <RouterLink :to="registerLinkUrl">Register</RouterLink>
-      </div>
-      
+          <h2>Sign in to iMokhonko.com</h2>
+
+          <!-- <div 
+            v-if="isError"
+            class="auth-page__error-alert"
+          >
+            {{ errorMessage }}
+          </div> -->
+
+          <TextInput
+            :model-value="login"
+            placeholder="Email or username"
+            @update:modelValue="login = $event" 
+          />
+
+          <TextInput
+            type="password"
+            placeholder="Password"
+            :model-value="password"
+            @update:modelValue="password = $event" 
+          />
+
+          <div class="auth-page__login-action-container">
+            <CheckboxInput 
+              label="Remember me"
+              v-model="isRememberMe"
+            />
+
+            <RouterLink class="auth-page__forgot-pass-link" :to="registerLinkUrl">Forgot password?</RouterLink>
+          </div>
+
+          <PrimaryButton
+            label="Sign in"
+            @click="signIn"
+            :is-loading="isLoading"
+          />
+
+          <LabeledDivider>or login with</LabeledDivider>
+
+          <GoogleAuth @authenticated="handleGoogleAuth" />
+
+          <div class="auth-page__sign-up-container">
+            Don't have an account? <RouterLink class="auth-page__sign-up-link" :to="registerLinkUrl">Sign up now</RouterLink>
+          </div>
+
+        </div>
     </div>
   </div>
 </template>
@@ -54,6 +78,9 @@ import { useRoute, useRouter } from 'vue-router';
 
 import TextInput from '@/components/reusable/TextInput';
 import LabeledDivider from '@/components/reusable/LabeledDivider';
+import CheckboxInput from '@/components/reusable/CheckboxInput';
+import PrimaryButton from '@/components/reusable/PrimaryButton';
+import SpinLoader from '@/components/reusable/SpinLoader';
 
 export default {
   name: 'HomeView',
@@ -61,8 +88,12 @@ export default {
   components: {
     TextInput,
     GoogleAuth,
-    LabeledDivider
+    LabeledDivider,
+    CheckboxInput,
+    PrimaryButton,
+    SpinLoader
   },
+
 
   setup() {
     const router = useRouter();
@@ -72,11 +103,13 @@ export default {
 
     const login = ref('');
     const password = ref('');
+    const isRememberMe = ref(false);
 
     const isError = ref(false);
     const errorMessage = ref('')
 
     const isLoading = ref(false);
+    const isGoogleCredentialsVerification = ref(false);
 
     const registerLinkUrl = computed(() => redirect_url ? `/register?redirect_url=${redirect_url}` : '/register');
 
@@ -126,6 +159,8 @@ export default {
 
     const handleGoogleAuth = async (authResponse) => {
       try {
+        isGoogleCredentialsVerification.value = true;
+
         const response = await fetch(`https://${env['auth-api']}/sign-in`, {
           method: "POST",
           body: JSON.stringify({
@@ -154,13 +189,17 @@ export default {
         }
       } catch(e) {
          console.log(e);
+      } finally {
+        isGoogleCredentialsVerification.value = false;
       }
     };
 
     return {
       login,
       password,
+      isRememberMe,
       isLoading,
+      isGoogleCredentialsVerification,
       registerLinkUrl,
 
       isError,
@@ -175,48 +214,100 @@ export default {
 
 <style lang="scss" scoped>
 .auth-page {
-  background:#f2f2f2;
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
 
-  h2 {
-    margin-bottom: 32px;
+  &__bg-container {
+    width: 100%;
+    max-width: 500px;
+    background: url('@/assets/images/bg.webp');
+    object-fit: cover;
+    flex-shrink: 0;
   }
 
-  &__email-container {
-    width: 400px;
-    padding: 16px;
-    border-radius: 8px;
-    background: #fff;
+  &__auth-container {
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    row-gap: 8px;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
+    background: #fff;
+    position: relative;
+
+    &--loading-overlay {
+      &:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        content: "";
+        background: rgba(0,0,0,0.5);
+        width: 100%;
+        height: 100%
+      }
+    }
+
+    .loader {
+      position: absolute;
+      z-index: 101;
+    }
+
+    &-inner {
+      max-width: 350px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      row-gap: 16px;
+
+      h2 {
+        text-align: center;
+      }
+
+      .btn-primary {
+        margin-top: 8px;
+      }
+    }
   }
 
-  &__actions {
+  &__login-action-container {
     display: flex;
     align-items: center;
-    column-gap: 8px;
+    justify-content: space-between;
   }
 
-  &__action-btn {
+  &__forgot-pass-link {
+    font-size: 12px;
+    color: grey;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
+  &__sign-up-container {
+    width: 100%;
     display: flex;
-    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    column-gap: 4px;
+
+    font-size: 14px;
+    font-weight: bold;
+    color: #6e6d7a;
   }
 
-  &__error-alert {
-    background: rgba(255, 0, 0, 0.7);
-    border-radius: 4px;
-    padding: 16px;
-    color: #000;
-  }
+  &__sign-up-link {
+    text-decoration: none;
+    color: rgba(23,138,231, 1);
 
-  .disabled {
-    pointer-events: none;
-    opacity: 0.5;
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
   }
 }
 </style>

@@ -16,4 +16,9 @@ body,
   box-sizing: border-box;
   font-family: 'Roboto', sans-serif;
 }
+
+.hidden-disable {
+  pointer-events: none;
+  user-select: none;
+}
 </style>
