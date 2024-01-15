@@ -61,12 +61,12 @@ export default {
 
     isInvalid: {
       type: Boolean,
-      default: true
+      default: false
     },
 
     errorMessage: {
       type: String,
-      default: 'Invalid'
+      default: ''
     }
   },
 
@@ -117,7 +117,7 @@ export default {
 
   &__error-message {
     color: #ff5555;
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 </style>

@@ -3,62 +3,71 @@
     <MovingBackground class="auth-page__bg-container" />
 
     <div class="auth-page__auth-container">
-        <div class="auth-page__auth-container-inner">
-          <h1>Create account</h1>
+      <div class="auth-page__auth-container-inner">
+        <h1>Create account</h1>
 
-          <ErrorAlert v-if="isError">
-            {{ errorMessage }}
-          </ErrorAlert>
+        <ErrorAlert v-if="errors.unknown">
+          {{ errors.unknown }}
+        </ErrorAlert>
 
-
-          <div class="row">
-            <TextInput
-              label="First name"
-              placeholder="Enter your first name"
-              :model-value="firstName"
-              @update:modelValue="firstName = $event" 
-            />
-
-            <TextInput
-              label="Last name"
-              placeholder="Enter your last name"
-              :model-value="lastName"
-              @update:modelValue="lastName = $event" 
-            />
-          </div>
-
-           <TextInput
-            label="Username"
-            placeholder="Enter your username"
-            :model-value="username"
-            @update:modelValue="username = $event" 
-          />
-
-           <TextInput
-            label="Email address"
-            placeholder="Email your email address"
-            :model-value="email"
-            @update:modelValue="email = $event" 
+        <div class="row">
+          <TextInput
+            label="First name"
+            placeholder="Enter your first name"
+            :model-value="firstName"
+            :is-invalid="!!errors.firstName"
+            :error-message="errors.firstName"
+            @update:modelValue="firstName = $event" 
           />
 
           <TextInput
-            label="Password"
-            type="password"
-            placeholder="Enter your password"
-            :model-value="password"
-            @update:modelValue="password = $event" 
+            label="Last name"
+            placeholder="Enter your last name"
+            :model-value="lastName"
+            :is-invalid="!!errors.lastName"
+            :error-message="errors.lastName"
+            @update:modelValue="lastName = $event" 
           />
-
-          <PrimaryButton
-            label="Create account"
-            @click="signUp"
-            :is-loading="isLoading"
-          />
-
-          <div class="auth-page__sign-up-container">
-            Already have an account? <RouterLink class="auth-page__sign-up-link" :to="loginLinkUrl">Sign in</RouterLink>
-          </div>
         </div>
+
+          <TextInput
+          label="Username"
+          placeholder="Enter your username"
+          :model-value="username"
+          :is-invalid="!!errors.username"
+          :error-message="errors.username"
+          @update:modelValue="username = $event" 
+        />
+
+          <TextInput
+          label="Email address"
+          placeholder="Email your email address"
+          :model-value="email"
+          :is-invalid="!!errors.email"
+          :error-message="errors.email"
+          @update:modelValue="email = $event" 
+        />
+
+        <TextInput
+          label="Password"
+          type="password"
+          placeholder="Enter your password"
+          :model-value="password"
+          :is-invalid="!!errors.password"
+          :error-message="errors.password"
+          @update:modelValue="password = $event" 
+        />
+
+        <PrimaryButton
+          label="Create account"
+          @click="signUp"
+          :is-loading="isLoading"
+        />
+
+        <div class="auth-page__sign-up-container">
+          Already have an account? <RouterLink class="auth-page__sign-up-link" :to="loginLinkUrl">Sign in.</RouterLink>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -67,31 +76,34 @@
 // components
 import TextInput from '@/components/reusable/TextInput';
 import PrimaryButton from '@/components/reusable/PrimaryButton';
-import ErrorAlert from '@/components/reusable/ErrorAlert';
 import MovingBackground from '@/components/layout/MovingBackground';
+import ErrorAlert from '@/components/reusable/ErrorAlert';
 
 import { ref, computed } from 'vue';
 
-import env from '../../env.cligenerated.json'
-
-import { useRoute } from 'vue-router';
-
+import { useRoute, useRouter } from 'vue-router';
 import { jwtDecode } from "jwt-decode";
+
+import env from '../../env.cligenerated.json';
+
+import authWithCredentials from '@/helpers/authWithCredentials';
 
 export default {
   components: {
     TextInput,
     PrimaryButton,
-    ErrorAlert,
-    MovingBackground
+    MovingBackground,
+    ErrorAlert
   },
 
   setup() {
     document.title = 'Create account | iMokhonko'
+
     const googleAuthResponse = window.GOOGLE_AUTH_RESPONSE;
     const hasGoogleResponseData = !!googleAuthResponse;
     const googleAuthResponseDecodedData = hasGoogleResponseData ? jwtDecode(googleAuthResponse.credential) : {};
 
+    const router = useRouter();
     const { query } = useRoute();
     const { redirect_url } = query ?? {};
 
@@ -103,41 +115,108 @@ export default {
     const firstName = ref(googleAuthResponseDecodedData?.given_name ?? '');
     const lastName = ref(googleAuthResponseDecodedData?.family_name ?? '');
 
+    const errors = ref({});
+
     const isLoading = ref(false);
-    const isError = ref(false);
-    const errorMessage = ref(null);
-    const isSuccess = ref(false);
 
     const loginLinkUrl = computed(() =>  redirect_url ? `/?redirect_url=${redirect_url}` : '/');
 
-    const register = async () => {
+    const validateSignUpForm = () => {
+      errors.value = {};
+
+      const normalizedFirstName = firstName.value.trim();
+      const normalizedLastName = lastName.value.trim();
+      const normalizedEmail = email.value.trim();
+      const normalizedUsername = username.value.trim();
+
+      if(!normalizedFirstName) errors.value.firstName = 'This field is required';
+      if(!normalizedLastName) errors.value.lastName = 'This field is required';
+
+      const usernamePattern = /^[a-zA-z0-9_.]+$/;
+      if(!normalizedUsername) errors.value.username = 'This field is required';
+      if(!usernamePattern.test(normalizedUsername)) errors.value.username = 'Username can contain only letters, numbers, underscores and dots';
+      
+      const emailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      if(!emailPattern.test(normalizedEmail)) errors.value.email = 'Invalid email format';
+      if(!normalizedEmail) errors.value.email = 'This field is required';
+
+
+      if(password.value.length < 6) errors.value.password = 'Password should be longer than 5 characters';
+      if(!password.value) errors.value.password = 'This field is required';
+    };
+
+    const parseApiErrors = (apiErrors = {}) => {
+      return Object.entries(apiErrors).reduce((allErrors, [fieldName, errors = []]) => ({
+        ...allErrors,
+        [fieldName]: errors[0]
+      }), {});
+    };
+
+    const signUp = async () => {
+      validateSignUpForm();
+
+      if(Object.keys(errors.value).length) {
+        return;
+      }
+
       isLoading.value = true;
-      isError.value = false;
 
       try {
+        const normalizedFirstName = firstName.value.trim();
+        const normalizedLastName = lastName.value.trim();
+        const normalizedEmail = email.value.trim();
+        const normalizedUsername = username.value.trim();
+        
         const response = await fetch(`${authApiUrl}/sign-up`,  {
           method: 'POST',
           body: JSON.stringify({
-            email: email.value,
-            login: username.value,
+            email: normalizedEmail,
+            username: normalizedUsername,
             password: password.value,
-            firstName: firstName.value,
-            lastName: lastName.value,
+            firstName: normalizedFirstName,
+            lastName: normalizedLastName,
+
             ...(googleAuthResponse?.credential && { googleCredential: googleAuthResponse.credential })
           })
         });
 
-        const result = await response.json();
+        if(response.status === 200) {
+          const {
+            isSuccess = false,
+            error: authWithCredentialsError = null
+          } = await authWithCredentials({
+            login: normalizedUsername,
+            password: password.value
+          });
 
-        if(result.errorMessage) {
-          isError.value = true;
-          errorMessage.value = result.errorMessage;
+          if(isSuccess) {
+            if(redirect_url) {
+              window.location = redirect_url;
+            }
+          } else {
+            console.error(authWithCredentialsError);
+
+            router.push({
+              name: 'login',
+              query
+            });
+          }
         } else {
-          isSuccess.value = true;
+          const result = await response.json();
+
+          const apiErrors = parseApiErrors(result.errors);
+
+          errors.value = parseApiErrors(result.errors);
+          if(apiErrors.unknown) {
+            // show main error
+            errors.value = { unknown: errors.value.unknown }
+          }
         }
+
       } catch(e) {
-        isError.value = true;
-        errorMessage.value = 'Something went wrong. Please try again later'
+        console.error(e);
+
+        errors.value = { unknown: 'Something went wrong. Please try again later' };
       } finally {
         isLoading.value = false;
       }
@@ -153,14 +232,13 @@ export default {
       hasGoogleResponseData,
       googleAuthResponseDecodedData,
 
+      errors,
+
       isLoading,
-      isError,
-      isSuccess,
-      errorMessage,
 
       loginLinkUrl,
 
-      register
+      signUp
     }
   }
 }
@@ -178,7 +256,6 @@ export default {
 
   .row {
     display: flex;
-    align-items: center;
     column-gap: 16px;
 
     .text-input {

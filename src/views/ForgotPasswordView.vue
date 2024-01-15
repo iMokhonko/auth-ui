@@ -39,7 +39,6 @@ export default {
     MovingBackground
   },
 
-
   setup() {
     document.title = 'Reset password | iMokhonko';
 

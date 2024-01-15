@@ -5,7 +5,6 @@
       'disabled': isDisabled,
       'loading': isLoading
     }]"
-    @click="$emit('click', $event)"
   >
     <SpinLoader v-if="isLoading" />
 

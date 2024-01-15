@@ -66,9 +66,6 @@
 import GoogleAuth from '@/components/reusable/GoogleAuth';
 
 import { ref, computed } from 'vue';
-
-import env from '../../env.cligenerated.json';
-
 import { useRoute, useRouter } from 'vue-router';
 
 import TextInput from '@/components/reusable/TextInput';
@@ -78,6 +75,10 @@ import PrimaryButton from '@/components/reusable/PrimaryButton';
 import SpinLoader from '@/components/reusable/SpinLoader';
 import ErrorAlert from '@/components/reusable/ErrorAlert';
 import MovingBackground from '@/components/layout/MovingBackground';
+
+// helpers
+import authWithCredentials from '@/helpers/authWithCredentials';
+import authWithGoogle from '@/helpers/authWithGoogle';
 
 export default {
   components: {
@@ -90,7 +91,6 @@ export default {
     ErrorAlert,
     MovingBackground
   },
-
 
   setup() {
     document.title = 'Sign in | iMokhonko';
@@ -112,72 +112,45 @@ export default {
 
     const registerLinkUrl = computed(() => redirect_url ? `/sing-up?redirect_url=${redirect_url}` : '/sign-up');
 
-    const setCookies = (accessToken, refreshToken) => {
-      const isDev = process.env.NODE_ENV === 'development';
-
-      // prod env does not have prefix
-      const cookiePrefix = env.__meta.config.env !== 'prod' ? `${env.__meta.config.env}-` : '';
-
-      document.cookie = `${cookiePrefix}access-token=${accessToken.value};max-age=${accessToken.maxAge};path=${accessToken.path ?? ''};sameSite=${accessToken.sameSite ?? 'none'};secure=${accessToken.secure ?? false};domain=${isDev ? 'localhost' : accessToken.domain}`;
-      document.cookie = `${cookiePrefix}refresh-token=${refreshToken.value};max-age=${refreshToken.maxAge};path=${refreshToken.path ?? ''};sameSite=${refreshToken.sameSite ?? 'none'};secure=${refreshToken.secure ?? false};domain=${isDev ? 'localhost' : refreshToken.domain}`;
-    };
-
     const signIn = async () => {
-      try {
-        isLoading.value = true;
-        isError.value = false;
+      isLoading.value = true;
+      isError.value = false;
 
-        const response = await fetch(`https://${env['auth-api']}/sign-in`, {
-          method: "POST",
-          body: JSON.stringify({
-            authType: 'CREDENTIALS',
-            login: login.value,
-            password: password.value
-          })
-        });
+      const {
+        isSuccess = false,
+        error = null
+      } = await authWithCredentials({
+        login: login.value,
+        password: password.value
+      });
 
-        const result = await response.json();
-
-        if(response.status === 200) {
-          const { accessToken, refreshToken } = result;
-
-          setCookies(accessToken, refreshToken);
-        
-          if(redirect_url) window.location = redirect_url;
-        } else {
-          isError.value = true;
-          errorMessage.value = 'We couldn’t find an account matching the login and password you entered';
+      if(isSuccess) {
+        if(redirect_url) {
+          window.location = redirect_url;
         }
-      } catch(e) {
-        console.error(e);
+      } else {
         isError.value = true;
-      } finally {
-        isLoading.value = false;
+        errorMessage.value = error;
       }
+
+      isLoading.value = false;
     };
 
     const handleGoogleAuth = async (authResponse) => {
-      try {
-        isGoogleCredentialsVerification.value = true;
+      isGoogleCredentialsVerification.value = true;
 
-        const response = await fetch(`https://${env['auth-api']}/sign-in`, {
-          method: "POST",
-          body: JSON.stringify({
-            authType: 'GOOGLE',
-            googleCredential: authResponse.credential 
-          })
-        });
+      const {
+        isSuccess = false,
+        isContinueSignUp = false,
+        error = null
+      } = await authWithGoogle(authResponse.credential);
 
-        if(response.status === 200) {
-          const result = await response.json();
-
-          const { accessToken, refreshToken } = result;
-
-          setCookies(accessToken, refreshToken);
-
-          if(redirect_url) window.location = redirect_url;
-          return;
-        } else {
+      if(isSuccess) {
+        if(redirect_url) {
+          window.location = redirect_url;
+        }
+      } else {
+        if(isContinueSignUp) {
           // save google reponse
           window.GOOGLE_AUTH_RESPONSE = authResponse;
 
@@ -185,12 +158,12 @@ export default {
             name: 'register',
             query
           });
+        } else {
+          console.error(error);
         }
-      } catch(e) {
-         console.log(e);
-      } finally {
-        isGoogleCredentialsVerification.value = false;
       }
+
+      isGoogleCredentialsVerification.value = false;
     };
 
     return {
