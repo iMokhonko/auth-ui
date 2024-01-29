@@ -45,12 +45,13 @@
           </div>
 
           <PrimaryButton
-            label="Sign in"
             @click="signIn"
             :is-loading="isLoading"
-          />
+          >
+            Sign in
+          </PrimaryButton>
 
-          <LabeledDivider>or login with</LabeledDivider>
+          <LabeledDivider>or sign in with</LabeledDivider>
 
           <GoogleAuth @authenticated="handleGoogleAuth" />
 

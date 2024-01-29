@@ -1,57 +1,72 @@
 <template>
-  <div ref="googleAuthButton" />
+  <OutlinedButton 
+    class="google-auth-button" 
+    @click="signIn"
+  >
+    <div class="google-auth-button__label">
+      <div class="google-auth-button__icon" />
+      Sign In with Google
+    </div>
+  </OutlinedButton>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import OutlinedButton from '@/components/reusable/OutlinedButton';
+
+import env from '../../../env.cligenerated.json';
 
 export default {
-  emits: ['authenticated'],
-
-  props: {
-    text: {
-      type: String,
-      default: 'signin_with'
-    }
+  components: {
+    OutlinedButton
   },
 
-  setup(props, { emit }) {
-    const googleAuthButton = ref(null);
+  methods: {
+    signIn() {
+      const popupWindow = window.open(
+        `https://${env['auth-api']}/sign-in?type=GOOGLE`,
+        'Sign in to iMokhonko', 
+        'height=600,width=600'
+      );
+    
+      const handleAuthMesage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
 
-    const handleCredentialResponse = (response) => emit('authenticated', response);
+          if(data.type !== 'google-auth:success') {
+            return;
+          }
 
-    const initGoogleAuth = () => {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
+          console.log('login', data);
 
-      script.addEventListener('load', async () => {
-        window.google.accounts.id.initialize({
-          client_id: '252143816418-tir6v1dcpo1l5069eoo9bti4h2lcph2j.apps.googleusercontent.com',
-          callback: handleCredentialResponse,
-        });
+          popupWindow?.close();
+          window.removeEventListener('message', handleAuthMesage, false);
+        } catch(e) {
+          // console.error(e);
+        }
+      }
 
-        window.google.accounts.id.renderButton(
-          googleAuthButton.value, {
-            type: 'standard', // 'icon'
-            theme: 'outline',
-            height: 48, 
-            text: props.text, // 'signin_with' , 'signup_with' , 'continue_with' , 'signin'
-            logo_alignment: 'left', // 'center'
-          },
-        );
-
-        window.google.accounts.id.prompt();
-      });
-    };
-
-    onMounted(() => { initGoogleAuth(); });
-
-    return {
-      googleAuthButton
-    }
+      window.addEventListener('message', handleAuthMesage, false);
+    },
   },
-}
+};
 </script>
+
+<style lang="scss">
+.google-auth-button {
+  &__label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    column-gap: 16px;
+  }
+
+  &__icon {
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+    background: url('@/assets/icons/google.webp');
+    background-size: 100%;
+  }
+}
+</style>

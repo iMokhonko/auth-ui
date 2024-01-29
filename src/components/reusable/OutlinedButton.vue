@@ -1,6 +1,6 @@
 <template>
   <button 
-    class="btn-primary" 
+    class="btn-outlined" 
     :class="[{
       'disabled': isDisabled,
       'loading': isLoading
@@ -33,13 +33,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.btn-primary {
-  background-color: rgba(23,138,231, 1);
-  color: #fff;
+.btn-outlined {
+  background-color: transparent;
+  border: 1px solid #e7e7e9;
+  color: #0d0c22;
   height: 48px;
   padding: 0 16px;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
   width: 100%;
@@ -51,9 +50,9 @@ export default {
 
   &:hover,
   &:focus-visible {
-    background-color: rgba(23,138,231, 0.9);
-    box-shadow: 0 0 0 4px rgba(23,138,231,0.1);
+    background-color: transparent;
     outline: none;
+    border-color: #dbdbde;
   }
 
   &.loading {

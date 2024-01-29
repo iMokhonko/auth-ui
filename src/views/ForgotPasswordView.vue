@@ -16,10 +16,9 @@
           @update:modelValue="email = $event" 
         />
 
-        <PrimaryButton
-          label="Reset password"
-          :is-loading="isLoading"
-        />
+        <PrimaryButton :is-loading="isLoading">
+          Reset password
+        </PrimaryButton>
       </div>
     </div>
   </div>
