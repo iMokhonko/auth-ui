@@ -16,10 +16,12 @@ import OutlinedButton from '@/components/reusable/OutlinedButton';
 import env from '../../../env.cligenerated.json';
 
 export default {
+  emits: ['authenticated'],
+
   components: {
     OutlinedButton
   },
-
+  
   methods: {
     signIn() {
       const popupWindow = window.open(
@@ -36,7 +38,7 @@ export default {
             return;
           }
 
-          console.log('login', data);
+          this.$emit('authenticated', data?.payload ?? {})
 
           popupWindow?.close();
           window.removeEventListener('message', handleAuthMesage, false);

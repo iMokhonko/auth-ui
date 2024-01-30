@@ -59,10 +59,11 @@
         />
 
         <PrimaryButton
-          label="Create account"
           @click="signUp"
           :is-loading="isLoading"
-        />
+        >
+          Create account
+        </PrimaryButton>
 
         <div class="auth-page__sign-up-container">
           Already have an account? <RouterLink class="auth-page__sign-up-link" :to="loginLinkUrl">Sign in.</RouterLink>
@@ -82,7 +83,6 @@ import ErrorAlert from '@/components/reusable/ErrorAlert';
 import { ref, computed } from 'vue';
 
 import { useRoute, useRouter } from 'vue-router';
-import { jwtDecode } from "jwt-decode";
 
 import env from '../../env.cligenerated.json';
 
@@ -101,7 +101,8 @@ export default {
 
     const googleAuthResponse = window.GOOGLE_AUTH_RESPONSE;
     const hasGoogleResponseData = !!googleAuthResponse;
-    const googleAuthResponseDecodedData = hasGoogleResponseData ? jwtDecode(googleAuthResponse.credential) : {};
+    const googleAuthAccessToken = googleAuthResponse?.accessToken ?? null;
+    const googleAuthResponseDecodedData = googleAuthResponse?.profile ?? null;
 
     const router = useRouter();
     const { query } = useRoute();
@@ -176,7 +177,7 @@ export default {
             firstName: normalizedFirstName,
             lastName: normalizedLastName,
 
-            ...(googleAuthResponse?.credential && { googleCredential: googleAuthResponse.credential })
+            ...(googleAuthAccessToken && { googleAuthAccessToken })
           })
         });
 

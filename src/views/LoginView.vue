@@ -4,12 +4,7 @@
 
     <div 
       class="auth-page__auth-container"
-      :class="{
-        'auth-page__auth-container--loading-overlay': isGoogleCredentialsVerification
-      }"
     >
-      <SpinLoader v-if="isGoogleCredentialsVerification" />
-
         <div 
           class="auth-page__auth-container-inner"
           :class="[{
@@ -73,13 +68,12 @@ import TextInput from '@/components/reusable/TextInput';
 import LabeledDivider from '@/components/reusable/LabeledDivider';
 import CheckboxInput from '@/components/reusable/CheckboxInput';
 import PrimaryButton from '@/components/reusable/PrimaryButton';
-import SpinLoader from '@/components/reusable/SpinLoader';
 import ErrorAlert from '@/components/reusable/ErrorAlert';
 import MovingBackground from '@/components/layout/MovingBackground';
 
 // helpers
 import authWithCredentials from '@/helpers/authWithCredentials';
-import authWithGoogle from '@/helpers/authWithGoogle';
+import setCookies from '@/helpers/setCookies';
 
 export default {
   components: {
@@ -88,7 +82,6 @@ export default {
     LabeledDivider,
     CheckboxInput,
     PrimaryButton,
-    SpinLoader,
     ErrorAlert,
     MovingBackground
   },
@@ -109,7 +102,6 @@ export default {
     const errorMessage = ref('')
 
     const isLoading = ref(false);
-    const isGoogleCredentialsVerification = ref(false);
 
     const registerLinkUrl = computed(() => redirect_url ? `/sing-up?redirect_url=${redirect_url}` : '/sign-up');
 
@@ -137,34 +129,32 @@ export default {
       isLoading.value = false;
     };
 
-    const handleGoogleAuth = async (authResponse) => {
-      isGoogleCredentialsVerification.value = true;
+    const handleGoogleAuth = async ({ status, authDetails, providerData }) => {
+      switch (status) {
+        case 'fully_signed_in': {
+          const { accessToken, refreshToken } = authDetails ?? {};
 
-      const {
-        isSuccess = false,
-        isContinueSignUp = false,
-        error = null
-      } = await authWithGoogle(authResponse.credential);
+          setCookies(accessToken, refreshToken);
 
-      if(isSuccess) {
-        if(redirect_url) {
-          window.location = redirect_url;
+          if(redirect_url) {
+            window.location = redirect_url;
+          }
+          
+          break;
         }
-      } else {
-        if(isContinueSignUp) {
-          // save google reponse
-          window.GOOGLE_AUTH_RESPONSE = authResponse;
+
+        case 'provider_signed_in':
+        default: {
+          window.GOOGLE_AUTH_RESPONSE = providerData;
 
           router.push({
             name: 'register',
             query
           });
-        } else {
-          console.error(error);
+
+          break;
         }
       }
-
-      isGoogleCredentialsVerification.value = false;
     };
 
     return {
@@ -172,7 +162,6 @@ export default {
       password,
       isRememberMe,
       isLoading,
-      isGoogleCredentialsVerification,
       registerLinkUrl,
 
       isError,
@@ -210,19 +199,6 @@ export default {
     box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
     background: #fff;
     position: relative;
-
-    &--loading-overlay {
-      &:before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 100;
-        content: "";
-        background: rgba(0,0,0,0.5);
-        width: 100%;
-        height: 100%
-      }
-    }
 
     .loader {
       position: absolute;
