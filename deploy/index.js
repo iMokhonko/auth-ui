@@ -81,88 +81,59 @@ const clearDir = async ({ s3, bucketName, bucketPrefix }) => {
 };
 
 module.exports = ({
-  serviceName: 'Auth UI',
+  serviceName: 'TEST Auth UI',
 
-  config: {
-    env: 'dev', // infrastructure environment
-    hostedZone: 'imokhonko.com', // hosted zone where DNS records will be created
-    subdomain: 'auth', // service subdomain
+  terraformBackendConfiguration: {
+    serviceName: 'test-auth-ui',
+    bucket: 'tf-state-backend-imokhonko',
+    region: 'us-east-1'
   },
 
-  aws: {
-    region: 'us-east-1', // aws region
-    profile: 'default', // aws credentials profile in .aws/credentials file
+  awsConfiguration: {
+    region: 'us-east-1',
+    profile: 'default',
   },
-
-  terraformBackend: {
-    serviceName: 'auth-ui', // backend service name
-    bucket: 'tf-state-backend-imokhonko', // aws bucket name where tfstate files will be stored
-    region: 'us-east-1' // bucket region in aws
-  },
-
-  terraformResources: [
-    {
-      // Create dns records in route 53 for service and create ACM certificates
-      folderName: 'dns',
-      outputName: 'dns',
-
-      global: true
-    },
-
-    // Create record in aws parameter store and save DNS address of deployed service
-    {
-      folderName: "config",
-      outputName: "config",
   
-      global: true
-    },
-
-    // Create S3 bucket for application build for current env & feature
-    {
-      folderName: "s3",
-      outputName: "s3",
-
-      global: true
-    },
-
-    // Create distribution for s3 bucket with app build for current env & feature
-    {
-      folderName: "cloudfront",
-      outputName: "distribution",
-
-      global: true
-    },
-  ],
+  config: {
+    hostedZone: 'imokhonko.com',
+    subdomain: 'test-auth',
+  },
 
   deploy: async ({ feature, infrastructure, AWS }) => {
     const cloudfront = new AWS.CloudFront({ apiVersion: '2019-03-26' });  
     const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
     
     await Promise.all([
+      // instal dependencies
+      runCliCommand({
+        cmd: 'pnpm',
+        args: ['i']
+      }),
+
       // build project
       runCliCommand({
-        cmd: 'npm',
+        cmd: 'pnpm',
         args: ['run', 'build']
       }),
 
        // clear old files in bucket for this feature
       clearDir({
         s3,
-        bucketName: infrastructure.s3.s3_bucket_name, 
+        bucketName: infrastructure.globalResources.s3.bucketName, 
         bucketPrefix: feature,
       })
     ]);
 
     await uploadDir({
       dirPath: 'dist', 
-      bucketName: infrastructure.s3.s3_bucket_name, 
+      bucketName: infrastructure.globalResources.s3.bucketName, 
       bucketPrefix: feature,
       s3
     });
 
     const distribtuionId = feature === 'master'
-      ? infrastructure.distribution.master_feature_cloudfront_distribution_id
-      : infrastructure.distribution.features_cloudfront_distribution_id
+      ? infrastructure.globalResources.cloudfront.masterFeatureDistributionId
+      : infrastructure.globalResources.cloudfront.featuresDistributionId
 
     await cloudfront.createInvalidation({
       DistributionId: distribtuionId,
