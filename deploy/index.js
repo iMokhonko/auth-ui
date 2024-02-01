@@ -81,10 +81,10 @@ const clearDir = async ({ s3, bucketName, bucketPrefix }) => {
 };
 
 module.exports = ({
-  serviceName: 'TEST Auth UI',
+  serviceName: 'Auth UI',
 
   terraformBackendConfiguration: {
-    serviceName: 'test-auth-ui',
+    serviceName: 'auth-ui',
     bucket: 'tf-state-backend-imokhonko',
     region: 'us-east-1'
   },
@@ -96,7 +96,7 @@ module.exports = ({
   
   config: {
     hostedZone: 'imokhonko.com',
-    subdomain: 'test-auth',
+    subdomain: 'auth',
   },
 
   deploy: async ({ feature, infrastructure, AWS }) => {

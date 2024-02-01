@@ -13,7 +13,7 @@
 <script>
 import OutlinedButton from '@/components/reusable/OutlinedButton';
 
-import env from '../../../env.cligenerated.json';
+import services from '../../../services.cligenerated.json';
 
 export default {
   emits: ['authenticated'],
@@ -25,7 +25,7 @@ export default {
   methods: {
     signIn() {
       const popupWindow = window.open(
-        `https://${env['auth-api']}/sign-in?type=GOOGLE`,
+        `https://${services['auth-api']}/sign-in?type=GOOGLE`,
         'Sign in to iMokhonko', 
         'height=600,width=600'
       );
