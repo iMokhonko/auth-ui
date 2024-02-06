@@ -25,7 +25,7 @@ export default {
   methods: {
     signIn() {
       const popupWindow = window.open(
-        `https://${services['auth-api']}/sign-in?type=GOOGLE`,
+        `https://${services['auth-api']}/sign-in?type=google`,
         'Sign in to iMokhonko', 
         'height=600,width=600'
       );

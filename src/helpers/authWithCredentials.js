@@ -3,7 +3,7 @@ import setCookies from './setCookies';
 
 export default async ({ login, password }) => {
   try {
-    const response = await fetch(`https://${services['auth-api']}/sign-in?type=CREDENTIALS`, {
+    const response = await fetch(`https://${services['auth-api']}/sign-in?type=credentials`, {
       method: "POST",
       body: JSON.stringify({
         login,
