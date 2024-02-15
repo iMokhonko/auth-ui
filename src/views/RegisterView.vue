@@ -30,7 +30,7 @@
           />
         </div>
 
-          <TextInput
+        <TextInput
           label="Username"
           placeholder="Enter your username"
           :model-value="username"
