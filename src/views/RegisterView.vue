@@ -30,7 +30,7 @@
           />
         </div>
 
-          <TextInput
+        <TextInput
           label="Username"
           placeholder="Enter your username"
           :model-value="username"
@@ -84,7 +84,7 @@ import { ref, computed } from 'vue';
 
 import { useRoute, useRouter } from 'vue-router';
 
-import env from '../../env.cligenerated.json';
+import services from '../../services.cligenerated.json';
 
 import authWithCredentials from '@/helpers/authWithCredentials';
 
@@ -108,7 +108,7 @@ export default {
     const { query } = useRoute();
     const { redirect_url } = query ?? {};
 
-    const authApiUrl = `https://${env['auth-api']}`
+    const authApiUrl = `https://${services['auth-api']}`
 
     const email = ref(googleAuthResponseDecodedData?.email ?? '');
     const username = ref('');

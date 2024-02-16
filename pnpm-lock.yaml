@@ -8,12 +8,21 @@ dependencies:
   core-js:
     specifier: ^3.8.3
     version: 3.8.3
+  jwt-decode:
+    specifier: ^4.0.0
+    version: 4.0.0
   mime-types:
     specifier: ^2.1.35
     version: 2.1.35
+  uuid:
+    specifier: ^9.0.1
+    version: 9.0.1
   vue:
     specifier: ^3.2.13
     version: 3.2.13
+  vue-google-oauth2:
+    specifier: ^1.5.10
+    version: 1.5.10
   vue-router:
     specifier: ^4.0.3
     version: 4.0.3(vue@3.2.13)
@@ -4671,6 +4680,11 @@ packages:
       graceful-fs: 4.2.11
     dev: true
 
+  /jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
+    engines: {node: '>=18'}
+    dev: false
+
   /keyv@4.5.3:
     resolution: {integrity: sha512-QCiSav9WaX1PgETJ+SpNnx2PRRapJ/oRSXM4VO5OGYGSjrxbKPVFVhB3l2OCbLCk329N8qyAtsJjSjvVBWzEug==}
     dependencies:
@@ -6771,6 +6785,11 @@ packages:
     hasBin: true
     dev: true
 
+  /uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
+    dev: false
+
   /v8-compile-cache@2.4.0:
     resolution: {integrity: sha512-ocyWc3bAHBB/guyqJQVI5o4BZkPhznPYUG2ea80Gond/BgNWpap8TOmLSeeQG7bnh2KMISxskdADG59j7zruhw==}
     dev: true
@@ -6804,6 +6823,10 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /vue-google-oauth2@1.5.10:
+    resolution: {integrity: sha512-0+ZGbauhkBhvTln2RPyeaSvRdrka194h+MeEQngy1H4UvGOC5hxRMB8QvUrVRP/w2Tt8/ByCqGDko6MuHpFpbQ==}
+    dev: false
 
   /vue-hot-reload-api@2.3.4:
     resolution: {integrity: sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==}
