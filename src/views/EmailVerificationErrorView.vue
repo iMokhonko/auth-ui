@@ -55,6 +55,10 @@ export default {
     width: 100%;
     max-width: 500px;
     flex-shrink: 0;
+
+    @media screen and (max-width: 768px) {
+      display: none;
+    }
   }
 
   &__container {

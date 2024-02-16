@@ -2,9 +2,7 @@
   <div class="auth-page">
     <MovingBackground class="auth-page__bg-container" />
 
-    <div 
-      class="auth-page__auth-container"
-    >
+    <div class="auth-page__auth-container">
         <div 
           class="auth-page__auth-container-inner"
           :class="[{
@@ -33,7 +31,8 @@
           <div class="auth-page__login-action-container">
             <CheckboxInput 
               label="Remember me"
-              v-model="isRememberMe"
+              :model-value="isRememberMe"
+              @update:modelValue="isRememberMe = $event"
             />
 
             <RouterLink class="auth-page__forgot-pass-link" to="/forgot-password">Forgot password?</RouterLink>
@@ -114,7 +113,8 @@ export default {
         error = null
       } = await authWithCredentials({
         login: login.value,
-        password: password.value
+        password: password.value,
+        isRememberMe: isRememberMe.value
       });
 
       if(isSuccess) {
@@ -134,7 +134,7 @@ export default {
         case 'fully_signed_in': {
           const { accessToken, refreshToken } = authDetails ?? {};
 
-          setCookies(accessToken, refreshToken);
+          setCookies(accessToken, refreshToken, { isRememberMe: isRememberMe.value });
 
           if(redirect_url) {
             window.location = redirect_url;
@@ -182,13 +182,16 @@ export default {
 
   h1 {
     font-size: 24px;
-    text-align: center;
   }
 
   &__bg-container {
     width: 100%;
     height: 100%;
     max-width: 500px;
+
+    @media screen and (max-width: 768px) {
+      display: none;
+    }
   }
 
   &__auth-container {
@@ -199,6 +202,7 @@ export default {
     box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
     background: #fff;
     position: relative;
+    padding: 24px;
 
     .loader {
       position: absolute;

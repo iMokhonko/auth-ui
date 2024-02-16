@@ -1,7 +1,7 @@
 import services from '../../services.cligenerated.json';
 import setCookies from './setCookies';
 
-export default async ({ login, password }) => {
+export default async ({ login, password, isRememberMe }) => {
   try {
     const response = await fetch(`https://${services['auth-api']}/sign-in?type=credentials`, {
       method: "POST",
@@ -16,7 +16,7 @@ export default async ({ login, password }) => {
     if(response.status === 200) {
       const { accessToken, refreshToken } = result;
 
-      setCookies(accessToken, refreshToken);
+      setCookies(accessToken, refreshToken, { isRememberMe });
 
       return { isSuccess: true };
     
