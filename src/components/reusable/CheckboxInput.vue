@@ -9,12 +9,14 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export default {  
+  emits: ['update:modelValue'],
+
   props: {
     label: {
       type: String,
       required: true
     },
-    value: {
+    modelValue: {
       type: Boolean,
       default: false
     }
@@ -27,11 +29,11 @@ export default {
 
     checkedValue: {
       get() {
-        return this.value;
+        return this.modelValue;
       },
 
       set(value) {
-        this.$emit('update:value', value);
+        this.$emit('update:modelValue', value);
       }
     }
   }
