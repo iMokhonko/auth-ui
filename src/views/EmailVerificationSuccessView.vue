@@ -14,7 +14,7 @@
 import { useRoute, useRouter } from 'vue-router';
 
 // components
-import MovingBackground from '@/components/layout/MovingBackground';
+import MovingBackground from '@/components/layout/MovingBackground.vue';
 
 export default {
   components: {

@@ -9,70 +9,185 @@
             'hidden-disable': isLoading
           }]"
         >
-          <h1>Sign in to iMokhonko</h1>
+          <h1 class="text-2xl font-semibold tracking-tight py-4">
+            Sign in
+          </h1>
 
-          <ErrorAlert v-if="isError">
-            {{ errorMessage }}
-          </ErrorAlert>
+          <Alert v-if="isError" variant="destructive">
+            <AlertDescription>
+              {{ errorMessage  }}
+            </AlertDescription>
+          </Alert>
 
-          <TextInput
-            :model-value="login"
-            placeholder="Email or username"
-            @update:modelValue="login = $event" 
+          <Input 
+            type="email" 
+            placeholder="Email or username" 
+            v-model="login" 
           />
 
-          <TextInput
-            type="password"
-            placeholder="Password"
-            :model-value="password"
-            @update:modelValue="password = $event" 
+          <Input 
+            type="password" 
+            placeholder="Password" 
+            v-model="password" 
           />
 
           <div class="auth-page__login-action-container">
-            <CheckboxInput 
-              label="Remember me"
-              :model-value="isRememberMe"
-              @update:modelValue="isRememberMe = $event"
-            />
 
-            <RouterLink class="auth-page__forgot-pass-link" to="/forgot-password">Forgot password?</RouterLink>
+            <div class="flex items-center space-x-2">
+              <Checkbox id="remember-me" v-model="isRememberMe" />
+              <label
+                for="remember-me"
+                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+              Remember me
+              </label>
+            </div>
+
+            <Button
+              variant="link"
+              class="p-0"
+              size="sm"
+              @click="isForgotPasswordDialogOpen = true"
+            >
+              Forgot password?
+            </Button>
           </div>
 
-          <PrimaryButton
+          <Button
             @click="signIn"
-            :is-loading="isLoading"
+            :disabled="isLoading"
           >
+            <ReloadIcon v-if="isLoading" class="w-4 h-4 mr-2 animate-spin" />
             Sign in
-          </PrimaryButton>
+          </Button>
 
-          <LabeledDivider>or sign in with</LabeledDivider>
+          <LabeledDivider>or</LabeledDivider>
 
           <GoogleAuth @authenticated="handleGoogleAuth" />
 
-          <div class="auth-page__sign-up-container">
-            Don't have an account? <RouterLink class="auth-page__sign-up-link" :to="registerLinkUrl">Create account.</RouterLink>
+          <div class="py-4 text-center text-sm text-muted-foreground">
+            Don't have an account? <RouterLink  class="underline underline-offset-4 hover:text-primary" :to="registerLinkUrl">Create account.</RouterLink>
           </div>
         </div>
     </div>
   </div>
+
+  <Dialog v-model:open="isForgotPasswordDialogOpen">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Reset password</DialogTitle>
+        <DialogDescription>
+          Enter the email address you used when you joined and we’ll send you instructions to reset your password.
+        </DialogDescription>
+      </DialogHeader>
+
+      <Alert v-if=" resetEmailErrorMessage" variant="destructive">
+        <AlertDescription>
+          {{ resetEmailErrorMessage  }}
+        </AlertDescription>
+      </Alert>
+
+      <div class="flex items-center space-x-2">
+        <div class="grid flex-1 gap-2">
+          <Input 
+            type="email" 
+            placeholder="Email" 
+            :disabled="isResetEmailSending"
+            v-model="resetEmail" 
+          />
+        </div>
+      </div>
+      
+      <DialogFooter class="sm:justify-end">
+        <Button 
+          type="button"
+          @click="submitResetEmail"
+          :disabled="isResetEmailSending"
+        >
+          <ReloadIcon v-if="isResetEmailSending" class="w-4 h-4 mr-2 animate-spin" />
+          Reset
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="isResetPasswordDialogOpen">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Reset password</DialogTitle>
+        <DialogDescription>
+          Enter your new password
+        </DialogDescription>
+      </DialogHeader>
+
+      <Alert v-if=" resetPasswordErrorMessage" variant="destructive">
+        <AlertDescription>
+          {{ resetPasswordErrorMessage  }}
+        </AlertDescription>
+      </Alert>
+
+      <div class="flex items-center space-x-2">
+        <div class="grid flex-1 gap-2">
+          <Input 
+            type="password" 
+            placeholder="New password" 
+            :disabled="isResetPassworSending"
+            v-model="newPassword" 
+          />
+        </div>
+      </div>
+      
+      <DialogFooter class="sm:justify-end">
+        <Button 
+          type="button"
+          @click="submitPasswordReset"
+          :disabled="isResetPassworSending"
+        >
+          <ReloadIcon v-if="isResetPassworSending" class="w-4 h-4 mr-2 animate-spin" />
+          Reset password
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script>
-import GoogleAuth from '@/components/reusable/GoogleAuth';
+import GoogleAuth from '@/components/reusable/GoogleAuth.vue';
 
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import TextInput from '@/components/reusable/TextInput';
-import LabeledDivider from '@/components/reusable/LabeledDivider';
-import CheckboxInput from '@/components/reusable/CheckboxInput';
-import PrimaryButton from '@/components/reusable/PrimaryButton';
-import ErrorAlert from '@/components/reusable/ErrorAlert';
-import MovingBackground from '@/components/layout/MovingBackground';
+import TextInput from '@/components/reusable/TextInput.vue';
+import LabeledDivider from '@/components/reusable/LabeledDivider.vue';
+import CheckboxInput from '@/components/reusable/CheckboxInput.vue';
+import PrimaryButton from '@/components/reusable/PrimaryButton.vue';
+import ErrorAlert from '@/components/reusable/ErrorAlert.vue';
+import MovingBackground from '@/components/layout/MovingBackground.vue';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { ReloadIcon } from '@radix-icons/vue'
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog'
+
+import { useToast } from '@/components/ui/toast/use-toast';
+import usePasswordReset from '@/composables/usePasswordReset';
 
 // helpers
 import authWithCredentials from '@/helpers/authWithCredentials';
-import setCookies from '@/helpers/setCookies';
+import setCookies from '@/helpers/setCookies.js';
+
 
 export default {
   components: {
@@ -82,14 +197,70 @@ export default {
     CheckboxInput,
     PrimaryButton,
     ErrorAlert,
-    MovingBackground
+    MovingBackground,
+
+    Button,
+    Alert,
+    AlertDescription,
+    Input,
+    Checkbox,
+    ReloadIcon,
+
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose
   },
 
   setup() {
-    document.title = 'Sign in | iMokhonko';
-
     const router = useRouter();
     const { query } = useRoute();
+    const { toast } = useToast();
+
+    const { 
+      isResetEmailSending, 
+      resetEmailErrorMessage, 
+      sendResetEmail,
+
+      isResetPassworSending,
+      resetPasswordErrorMessage,
+      resetPassword
+    } = usePasswordReset();
+
+    const isForgotPasswordDialogOpen = ref(false);
+    const resetEmail = ref('');
+    const submitResetEmail = async () => {
+      try {
+        await sendResetEmail(resetEmail.value);
+        isForgotPasswordDialogOpen.value = false;
+
+         toast({
+          title: 'Password reset',
+          description: 'If your email address exists in our database, you will receive a password recovery email',
+        });
+      } catch(e) {}
+    };
+
+    const isResetPasswordDialogOpen = ref(!!query.resetPasswordToken);
+    const newPassword = ref('');
+
+    const submitPasswordReset = async () => {
+      try {
+        await resetPassword(newPassword.value, query.resetPasswordToken);
+        isResetPasswordDialogOpen.value = false;
+
+        toast({
+          title: 'Password reset',
+          description: 'Your password succesfully reset',
+        });
+      } catch(e) {}
+    }
+
+    document.title = 'Sign in | iMokhonko';
 
     const { redirect_url } = query ?? {};
 
@@ -158,6 +329,18 @@ export default {
     };
 
     return {
+      resetEmail,
+      isResetEmailSending, 
+      resetEmailErrorMessage,
+      isForgotPasswordDialogOpen,
+      submitResetEmail,
+
+      newPassword,
+      isResetPasswordDialogOpen,
+      isResetPassworSending,
+      resetPasswordErrorMessage,
+      submitPasswordReset,
+
       login,
       password,
       isRememberMe,
@@ -179,10 +362,6 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-
-  h1 {
-    font-size: 24px;
-  }
 
   &__bg-container {
     width: 100%;
@@ -210,19 +389,11 @@ export default {
     }
 
     &-inner {
-      max-width: 400px;
+      max-width: 350px;
       width: 100%;
       display: flex;
       flex-direction: column;
-      row-gap: 16px;
-
-      h2 {
-        text-align: center;
-      }
-
-      .btn-primary {
-        margin-top: 8px;
-      }
+      row-gap: 8px;
     }
   }
 

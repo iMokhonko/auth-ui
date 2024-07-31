@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import SpinLoader from './SpinLoader';
+import SpinLoader from './SpinLoader.vue';
 
 export default {
   components: { SpinLoader },

@@ -85,12 +85,12 @@ module.exports = ({
 
   terraformBackendConfiguration: {
     serviceName: 'auth-ui',
-    bucket: 'tf-state-backend-imokhonko',
-    region: 'us-east-1'
+    bucket: 'tfstate-floor13',
+    region: 'eu-central-1'
   },
 
   awsConfiguration: {
-    region: 'us-east-1',
+    region: 'eu-central-1',
     profile: 'default',
   },
   

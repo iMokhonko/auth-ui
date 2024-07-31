@@ -12,16 +12,6 @@ const routes = [
     component: () => import(/* webpackChunkName: "register" */ '../views/RegisterView.vue')
   },
   {
-    path: '/forgot-password',
-    name: 'forgot-password',
-    component: () => import(/* webpackChunkName: "forgot-password-view" */ '../views/ForgotPasswordView.vue')
-  },
-  {
-    path: '/reset-password',
-    name: 'reset-password',
-    component: () => import(/* webpackChunkName: "reset-password-view" */ '../views/ResetPasswordView.vue')
-  },
-  {
     path: '/email-verification-success-page',
     name: 'email-verification-success-view',
     component: () => import(/* webpackChunkName: "email-verification-success-view" */ '../views/EmailVerificationSuccessView.vue')

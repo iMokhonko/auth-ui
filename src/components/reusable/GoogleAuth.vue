@@ -1,53 +1,50 @@
 <template>
-  <OutlinedButton 
-    class="google-auth-button" 
-    @click="signIn"
-  >
+  <Button variant="outline" @click="signIn">
     <div class="google-auth-button__label">
       <div class="google-auth-button__icon" />
       Sign In with Google
     </div>
-  </OutlinedButton>
+  </Button>
 </template>
 
 <script>
-import OutlinedButton from '@/components/reusable/OutlinedButton';
+import { Button } from '@/components/ui/button'
 
-import services from '../../../services.cligenerated.json';
+import services from "../../../services.cligenerated.json";
 
 export default {
-  emits: ['authenticated'],
+  emits: ["authenticated"],
 
   components: {
-    OutlinedButton
+    Button,
   },
-  
+
   methods: {
     signIn() {
       const popupWindow = window.open(
-        `https://${services['auth-api']}/sign-in?type=google`,
-        'Sign in to iMokhonko', 
-        'height=600,width=600'
+        `https://${services["auth-api"]}/sign-in?type=google`,
+        "Sign in to iMokhonko",
+        "height=600,width=600"
       );
-    
+
       const handleAuthMesage = (event) => {
         try {
           const data = JSON.parse(event.data);
 
-          if(data.type !== 'google-auth:success') {
+          if (data.type !== "google-auth:success") {
             return;
           }
 
-          this.$emit('authenticated', data?.payload ?? {})
+          this.$emit("authenticated", data?.payload ?? {});
 
           popupWindow?.close();
-          window.removeEventListener('message', handleAuthMesage, false);
-        } catch(e) {
+          window.removeEventListener("message", handleAuthMesage, false);
+        } catch (e) {
           // console.error(e);
         }
-      }
+      };
 
-      window.addEventListener('message', handleAuthMesage, false);
+      window.addEventListener("message", handleAuthMesage, false);
     },
   },
 };
@@ -59,15 +56,14 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 8px;
-    column-gap: 16px;
+    column-gap: 8px;
   }
 
   &__icon {
     width: 16px;
     height: 16px;
     overflow: hidden;
-    background: url('@/assets/icons/google.webp');
+    background: url("@/assets/icons/google.webp");
     background-size: 100%;
   }
 }
