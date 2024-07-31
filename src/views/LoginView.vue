@@ -157,13 +157,8 @@ import GoogleAuth from '@/components/reusable/GoogleAuth.vue';
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import TextInput from '@/components/reusable/TextInput.vue';
 import LabeledDivider from '@/components/reusable/LabeledDivider.vue';
-import CheckboxInput from '@/components/reusable/CheckboxInput.vue';
-import PrimaryButton from '@/components/reusable/PrimaryButton.vue';
-import ErrorAlert from '@/components/reusable/ErrorAlert.vue';
 import MovingBackground from '@/components/layout/MovingBackground.vue';
-
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox'
@@ -177,8 +172,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose
 } from '@/components/ui/dialog'
 
 import { useToast } from '@/components/ui/toast/use-toast';
@@ -188,15 +181,10 @@ import usePasswordReset from '@/composables/usePasswordReset';
 import authWithCredentials from '@/helpers/authWithCredentials';
 import setCookies from '@/helpers/setCookies.js';
 
-
 export default {
   components: {
-    TextInput,
     GoogleAuth,
     LabeledDivider,
-    CheckboxInput,
-    PrimaryButton,
-    ErrorAlert,
     MovingBackground,
 
     Button,
@@ -212,8 +200,6 @@ export default {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
-    DialogClose
   },
 
   setup() {
@@ -242,7 +228,9 @@ export default {
           title: 'Password reset',
           description: 'If your email address exists in our database, you will receive a password recovery email',
         });
-      } catch(e) {}
+      } catch(e) {
+        console.debug(e)
+      }
     };
 
     const isResetPasswordDialogOpen = ref(!!query.resetPasswordToken);
@@ -257,7 +245,9 @@ export default {
           title: 'Password reset',
           description: 'Your password succesfully reset',
         });
-      } catch(e) {}
+      } catch(e) {
+        console.debug(e)
+      }
     }
 
     document.title = 'Sign in | iMokhonko';

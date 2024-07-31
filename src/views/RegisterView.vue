@@ -4,69 +4,105 @@
 
     <div class="auth-page__auth-container">
       <div class="auth-page__auth-container-inner">
-        <h1>Create account</h1>
+        <h1 class="text-2xl font-semibold tracking-tight py-4">
+          Create account
+        </h1>
 
-        <ErrorAlert v-if="errors.unknown">
-          {{ errors.unknown }}
-        </ErrorAlert>
+        <Alert v-if="errors.unknown" variant="destructive">
+          <AlertDescription>
+            {{ errors.unknown }}
+          </AlertDescription>
+        </Alert>
 
         <div class="row">
-          <TextInput
-            label="First name"
-            placeholder="Enter your first name"
-            :model-value="firstName"
-            :is-invalid="!!errors.firstName"
-            :error-message="errors.firstName"
-            @update:modelValue="firstName = $event"
-          />
+          <div>
+            <Label 
+              for="first-name"
+              :class="{ 'text-destructive': !!errors.firstName }"
+            >
+              First name
+            </Label>
+            <Input
+              id="first-name"
+              placeholder="Enter your first name"
+              v-model="firstName"
+            />
+            <span class="text-xs text-destructive">{{ errors.firstName }}</span>
+          </div>
 
-          <TextInput
-            label="Last name"
-            placeholder="Enter your last name"
-            :model-value="lastName"
-            :is-invalid="!!errors.lastName"
-            :error-message="errors.lastName"
-            @update:modelValue="lastName = $event"
-          />
+          <div>
+            <Label 
+              for="last-name"
+              :class="{ 'text-destructive': !!errors.lastName }"
+            >
+              Last name
+            </Label>
+            <Input
+              id="last-name"
+              placeholder="Enter your last name"
+              v-model="lastName"
+            />
+            <span v-if="!!errors.lastName" class="text-xs text-destructive">{{ errors.lastName }}</span>
+          </div>
         </div>
 
-        <TextInput
-          label="Username"
-          placeholder="Enter your username"
-          :model-value="username"
-          :is-invalid="!!errors.username"
-          :error-message="errors.username"
-          @update:modelValue="username = $event"
-        />
-
-        <TextInput
-          label="Email address"
-          placeholder="Email your email address"
-          :model-value="email"
-          :is-invalid="!!errors.email"
-          :error-message="errors.email"
-          @update:modelValue="email = $event"
-        />
-
-        <TextInput
-          label="Password"
-          type="password"
-          placeholder="Enter your password"
-          :model-value="password"
-          :is-invalid="!!errors.password"
-          :error-message="errors.password"
-          @update:modelValue="password = $event"
-        />
-
-        <PrimaryButton @click="signUp" :is-loading="isLoading">
-          Create account
-        </PrimaryButton>
-
-        <div class="auth-page__sign-up-container">
-          Already have an account?
-          <RouterLink class="auth-page__sign-up-link" :to="loginLinkUrl"
-            >Sign in.</RouterLink
+        <div>
+          <Label 
+            for="username"
+            :class="{ 'text-destructive': !!errors.username}"
           >
+            Username
+          </Label>
+          <Input
+            id="username"
+            placeholder="Enter your username"
+            v-model="username"
+          />
+          <span v-if="!!errors.username" class="text-xs text-destructive">{{ errors.username }}</span>
+        </div>
+
+        <div>
+          <Label 
+            for="email"
+            :class="{ 'text-destructive': !!errors.email }"
+          >
+            Email address
+          </Label>
+          <Input
+            id="email"
+            placeholder="Email your email address"
+            v-model="email"
+          />
+          <span v-if="!!errors.email" class="text-xs text-destructive">{{ errors.email }}</span>
+        </div>
+
+        <div>
+          <Label 
+            for="password"
+            :class="{ 'text-destructive': !!errors.password }"
+          >
+            Password
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            v-model="password"
+          />
+          <span v-if="!!errors.password" class="text-xs text-destructive">{{ errors.password }}</span>
+        </div>
+
+        <Button 
+          class="mt-4" 
+          :disabled="isLoading"
+          @click="signUp"
+        >
+          <ReloadIcon v-if="isLoading" class="w-4 h-4 mr-2 animate-spin" />
+          Create account
+        </Button>
+
+        <div class="text-center text-sm text-muted-foreground">
+          Already have an account? <RouterLink  class="underline underline-offset-4 hover:text-primary" :to="loginLinkUrl">Sign in.</RouterLink>
         </div>
       </div>
     </div>
@@ -75,13 +111,14 @@
 
 <script>
 // components
-import TextInput from "@/components/reusable/TextInput.vue";
-import PrimaryButton from "@/components/reusable/PrimaryButton.vue";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button'
+import { ReloadIcon } from '@radix-icons/vue'
 import MovingBackground from "@/components/layout/MovingBackground.vue";
-import ErrorAlert from "@/components/reusable/ErrorAlert.vue";
 
 import { ref, computed } from "vue";
-
 import { useRoute, useRouter } from "vue-router";
 
 import services from "../../services.cligenerated.json";
@@ -90,10 +127,14 @@ import authWithCredentials from "@/helpers/authWithCredentials";
 
 export default {
   components: {
-    TextInput,
-    PrimaryButton,
     MovingBackground,
-    ErrorAlert,
+
+    Alert,
+    AlertDescription,
+    Input,
+    Label,
+    Button,
+    ReloadIcon
   },
 
   setup() {
@@ -260,17 +301,13 @@ export default {
   height: 100%;
   display: flex;
 
-  h1 {
-    font-size: 24px;
-  }
-
   .row {
+    width: 100%;
     display: flex;
     column-gap: 16px;
 
-    .text-input {
-      width: calc(50% - 8px);
-      flex-shrink: 0;
+    & > div {
+      flex-grow: 1;
     }
   }
 
@@ -292,78 +329,14 @@ export default {
     box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.4);
     background: #fff;
     position: relative;
-
-    &--loading-overlay {
-      &:before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 100;
-        content: "";
-        background: rgba(0, 0, 0, 0.5);
-        width: 100%;
-        height: 100%;
-      }
-    }
-
-    .loader {
-      position: absolute;
-      z-index: 101;
-    }
+    padding: 0 16px;
 
     &-inner {
-      max-width: 400px;
+      max-width: 350px;
       width: 100%;
       display: flex;
       flex-direction: column;
       row-gap: 16px;
-
-      h2 {
-        text-align: center;
-      }
-
-      .btn-primary {
-        margin-top: 8px;
-      }
-    }
-  }
-
-  &__login-action-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__forgot-pass-link {
-    font-size: 12px;
-    color: grey;
-    text-decoration: none;
-
-    &:hover,
-    &:focus-visible {
-      text-decoration: underline;
-    }
-  }
-
-  &__sign-up-container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 16px;
-    column-gap: 4px;
-
-    font-size: 14px;
-    color: #6e6d7a;
-  }
-
-  &__sign-up-link {
-    text-decoration: none;
-    color: rgba(23, 138, 231, 1);
-
-    &:hover,
-    &:focus-visible {
-      text-decoration: underline;
     }
   }
 }
