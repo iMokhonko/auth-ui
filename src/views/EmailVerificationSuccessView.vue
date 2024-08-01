@@ -1,42 +1,35 @@
 <template>
   <div class="email-verification-success-page">
-    <MovingBackground class="email-verification-success-page__bg-container" />
+    <CheckCircledIcon class="w-[100px] h-[100px] text-[green]" /> 
 
-   <div class="email-verification-success-page__container">
-      <div class="email-verification-success-page__container-inner">
-        <span class="icon">✅</span> {{ message }}
-      </div>
-    </div>
+    <h1 class="text-4xl font-extrabold tracking-tight lg:text-5xl">
+      Your email is verified
+    </h1>
+
+    <span class="text-sm text-muted-foreground">
+      Thank you for confirming your email address. Your account is now successfully verified. Welcome aboard!
+    </span>
+
+    <Button as-child>
+      <RouterLink to="/">
+        Sign in
+      </RouterLink>
+    </Button>
   </div>
 </template>
 
 <script>
-import { useRoute, useRouter } from 'vue-router';
-
-// components
-import MovingBackground from '@/components/layout/MovingBackground.vue';
+import { Button } from '@/components/ui/button'
+import { CheckCircledIcon } from '@radix-icons/vue'
 
 export default {
   components: {
-    MovingBackground
+    Button,
+    CheckCircledIcon
   },
 
   setup() {
-    document.title = 'Email verified | iMokhonko';
-
-    const router = useRouter();
-    const { query } = useRoute();
-
-    if(!query?.message) {
-      router.push({
-        name: 'login',
-        query
-      });
-    }
-
-    return {
-      message: query?.message
-    }
+    document.title = 'Email verified';
   },
 }
 </script>
@@ -46,37 +39,11 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-
-  .header {
-    font-size: 24px;
-  }
-
-  &__bg-container {
-    width: 100%;
-    max-width: 500px;
-    flex-shrink: 0;
-
-    @media screen and (max-width: 768px) {
-      display: none;
-    }
-  }
-
-  &__container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
-    background: #fff;
-    position: relative;
-
-    &-inner {
-      max-width: 350px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      row-gap: 24px;
-    }
-  }
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  row-gap: 24px;
+  padding: 16px;
+  text-align: center;
 }
 </style>

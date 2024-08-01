@@ -159,12 +159,12 @@ import { useRoute, useRouter } from 'vue-router';
 
 import LabeledDivider from '@/components/reusable/LabeledDivider.vue';
 import MovingBackground from '@/components/layout/MovingBackground.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { ReloadIcon } from '@radix-icons/vue'
-
+import { RocketIcon } from '@radix-icons/vue'
 import {
   Dialog,
   DialogContent,
@@ -189,6 +189,8 @@ export default {
 
     Button,
     Alert,
+    AlertTitle,
+    RocketIcon,
     AlertDescription,
     Input,
     Checkbox,

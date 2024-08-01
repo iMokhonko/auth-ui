@@ -1,38 +1,39 @@
 <template>
   <div class="email-verification-error-page">
-    <MovingBackground class="email-verification-error-page__bg-container" />
+    <ExclamationTriangleIcon class="w-[100px] h-[100px] text-[red]" /> 
 
-   <div class="email-verification-error-page__container">
-      <div class="email-verification-error-page__container-inner">
-        <span class="icon">❌</span> {{ message }}
-      </div>
-    </div>
+    <h1 class="text-4xl font-extrabold tracking-tight lg:text-5xl">
+      Your email is not verified
+    </h1>
+
+    <span v-if="message" class="text-sm text-muted-foreground">
+      {{ message }}
+    </span>
+
+    <Button as-child>
+      <RouterLink to="/">
+        Sign in
+      </RouterLink>
+    </Button>
   </div>
 </template>
 
 <script>
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 
-// components
-import MovingBackground from '@/components/layout/MovingBackground.vue';
+import { ExclamationTriangleIcon } from '@radix-icons/vue'
+import { Button } from '@/components/ui/button'
 
 export default {
   components: {
-    MovingBackground
+    Button,
+    ExclamationTriangleIcon
   },
 
   setup() {
-    document.title = 'Email verification error | iMokhonko';
-
-    const router = useRouter();
+    document.title = 'Email verification error';
+    
     const { query } = useRoute();
-
-    if(!query?.message) {
-      router.push({
-        name: 'login',
-        query
-      });
-    }
 
     return {
       message: query?.message
@@ -46,38 +47,11 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-
-  .header {
-    font-size: 24px;
-  }
-
-  &__bg-container {
-    width: 100%;
-    max-width: 500px;
-    flex-shrink: 0;
-
-    @media screen and (max-width: 768px) {
-      display: none;
-    }
-  }
-
-  &__container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0px 0px 30px 0px rgba(0,0,0,0.4);
-    background: #fff;
-    position: relative;
-
-    &-inner {
-      max-width: 350px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      row-gap: 24px;
-      color: #ff5555
-    }
-  }
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  row-gap: 24px;
+  padding: 16px;
+  text-align: center;
 }
 </style>
