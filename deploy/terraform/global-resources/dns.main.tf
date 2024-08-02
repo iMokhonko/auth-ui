@@ -1,3 +1,9 @@
+provider "aws" {
+  alias   = "aws_certificates_region"
+  region  = "us-east-1"
+  profile = "default"
+}
+
 locals {
   hosted_zone_name = "${var.config.subdomain}${var.env != "prod" ? ".${var.env}" : ""}"
 }
@@ -15,6 +21,8 @@ resource "aws_acm_certificate" "master_certificate" {
 
   validation_method = "DNS"
 
+  provider = aws.aws_certificates_region
+
   tags = var.tags
 }
 
@@ -25,6 +33,8 @@ resource "aws_acm_certificate" "features_certificate" {
   domain_name = "*.${local.hosted_zone_name}.${var.config.hostedZone}"
 
   validation_method = "DNS"
+
+  provider = aws.aws_certificates_region
 
   tags = var.tags
 }
@@ -75,6 +85,7 @@ resource "aws_acm_certificate_validation" "master_acm_validation" {
   certificate_arn         = aws_acm_certificate.master_certificate.arn
   validation_record_fqdns = [for record in aws_route53_record.acm_master_validation_record : record.fqdn]
 
+  provider   = aws.aws_certificates_region
   depends_on = [aws_route53_record.acm_master_validation_record]
 }
 
@@ -84,6 +95,7 @@ resource "aws_acm_certificate_validation" "features_acm_validation" {
   certificate_arn         = aws_acm_certificate.features_certificate[0].arn
   validation_record_fqdns = [for record in aws_route53_record.acm_features_validation_record : record.fqdn]
 
+  provider   = aws.aws_certificates_region
   depends_on = [aws_route53_record.acm_features_validation_record]
 }
 

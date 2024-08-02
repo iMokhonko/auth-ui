@@ -3,6 +3,9 @@ const path = require('path');
 const mime = require('mime-types');
 const { spawn } = require('child_process');
 
+const { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
+const  { CloudFrontClient, CreateInvalidationCommand } = require('@aws-sdk/client-cloudfront');
+
 const runCliCommand = async ({ cmd, args }) => {
 	return new Promise(resolve => {
 		const process = spawn(cmd, args);
@@ -14,21 +17,21 @@ const runCliCommand = async ({ cmd, args }) => {
 	});
 }
 
-const uploadFile = async ({ filePath, s3, bucketName, bucketPrefix }) => {
-  const fileContent = await fs.readFile(filePath);
-
-  const params = {
-      Bucket: bucketName,
-      Key: `${bucketPrefix}/${filePath.replace('dist/', '')}`, 
-      Body: fileContent,
-      ContentType: mime.lookup(filePath)
+const uploadFile = async ({ filePath, s3Client, bucketName, bucketPrefix }) => {
+  const commandParams = {
+    Bucket: bucketName,
+    Key: `${bucketPrefix}/${filePath.replace('dist/', '')}`,
+    Body: await fs.readFile(filePath),
+    ContentType: mime.lookup(filePath)
   };
 
-  await s3.upload(params).promise();
+  const command = new PutObjectCommand(commandParams);
+  await s3Client.send(command);
+
   console.log(`File uploaded successfully to ${filePath.replace('dist', `${bucketName}/${bucketPrefix}`)}`);
 }
 
-const uploadDir = async ({ dirPath, s3, bucketName, bucketPrefix }) => {
+const uploadDir = async ({ dirPath, s3Client, bucketName, bucketPrefix }) => {
   const files = await fs.readdir(dirPath);
   
   for (const file of files) {
@@ -38,45 +41,45 @@ const uploadDir = async ({ dirPath, s3, bucketName, bucketPrefix }) => {
     if (stats.isFile()) {
       await uploadFile({ 
         filePath, 
-        s3, 
+        s3Client, 
         bucketName, 
         bucketPrefix 
       });
     } else if (stats.isDirectory()){
       await uploadDir({ 
         dirPath: filePath, 
-        s3, bucketName, 
+        s3Client, 
+        bucketName, 
         bucketPrefix, 
       });
     }
   } 
 }
 
-const clearDir = async ({ s3, bucketName, bucketPrefix }) => {
-  var params = {
-    Bucket: bucketName,
-    Prefix: bucketPrefix
-  };
-
+const clearDir = async ({ s3Client, bucketName, bucketPrefix }) => {
   try {
-    const listedObjects = await s3.listObjectsV2(params).promise();
+    const listObjectsCommand = new ListObjectsV2Command({ Bucket: bucketName, Prefix: bucketPrefix });
+    const listedObjects = await s3Client.send(listObjectsCommand);
 
     if (listedObjects.Contents.length === 0) return;
 
-    params = {Bucket: bucketName};
-    params.Delete = { Objects: [] };
+    const deleteObjectsCommandParams = { 
+      Bucket: bucketName,
+      Delete: { Objects: [] }
+    };
 
     listedObjects.Contents.forEach(({ Key }) => {
-      params.Delete.Objects.push({ Key });
+      deleteObjectsCommandParams.Delete.Objects.push({ Key });
     });
 
-    params.Delete.Objects.push({ Key: `${bucketPrefix}/` });
+    deleteObjectsCommandParams.Delete.Objects.push({ Key: `${bucketPrefix}/` });
 
-    await s3.deleteObjects(params).promise();
+    const deleteObjectsCommand = new DeleteObjectsCommand(deleteObjectsCommandParams);
+    await s3Client.send(deleteObjectsCommand);
 
-    if (listedObjects.IsTruncated) await clearDir(bucketName, bucketPrefix);
+    if (listedObjects.IsTruncated) await clearDir({ s3Client, bucketName, bucketPrefix });
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -99,9 +102,9 @@ module.exports = ({
     subdomain: 'auth',
   },
 
-  deploy: async ({ feature, infrastructure, AWS }) => {
-    const cloudfront = new AWS.CloudFront({ apiVersion: '2019-03-26' });  
-    const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+  deploy: async ({ feature, infrastructure }) => {
+    const s3Client = new S3Client({ region: 'eu-central-1' });
+    const cloudFrontClient = new CloudFrontClient({ apiVersion: '2019-03-26' });
     
     await Promise.all([
       // instal dependencies
@@ -118,7 +121,7 @@ module.exports = ({
 
        // clear old files in bucket for this feature
       clearDir({
-        s3,
+        s3Client,
         bucketName: infrastructure.globalResources.s3.bucketName, 
         bucketPrefix: feature,
       })
@@ -128,22 +131,26 @@ module.exports = ({
       dirPath: 'dist', 
       bucketName: infrastructure.globalResources.s3.bucketName, 
       bucketPrefix: feature,
-      s3
+      s3Client
     });
 
-    const distribtuionId = feature === 'master'
+    const distributionId = feature === 'master'
       ? infrastructure.globalResources.cloudfront.masterFeatureDistributionId
       : infrastructure.globalResources.cloudfront.featuresDistributionId
 
-    await cloudfront.createInvalidation({
-      DistributionId: distribtuionId,
+    const createInvalidationCommandParams = {
+      DistributionId: distributionId,
       InvalidationBatch: {
-          CallerReference: '' + (new Date().getTime()), 
-          Paths: {
-              Quantity: 1,
-              Items: feature === 'master' ? [`/*`] : [`/${feature}/*`]
+        CallerReference: '' + (new Date().getTime()), 
+        Paths: {
+          Quantity: 1,
+          Items: feature === 'master' ? [`/*`] : [`/${feature}/*`]
         }
       }
-    }).promise();
+    };
+
+    const createInvalidationCommand = new CreateInvalidationCommand(createInvalidationCommandParams);
+
+    await cloudFrontClient.send(createInvalidationCommand)
   },
 });
